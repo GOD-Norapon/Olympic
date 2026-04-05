@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SW Olympic</title>
+    <title>SW Olympic Regis</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SweetAlert2 -->
@@ -228,6 +228,9 @@
                 <div class="flex flex-wrap gap-2 justify-end mb-4">
                     <button id="btn-download-template" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition border">โหลด Template Excel</button>
                     
+                    <!-- Single Add Button -->
+                    <button onclick="addSubject()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">+ เพิ่มวิชา</button>
+
                     <!-- Separate Upload Buttons -->
                     <button onclick="document.getElementById('excel-upload-subjects').click()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">นำเข้าข้อมูลวิชา</button>
                     <input type="file" id="excel-upload-subjects" accept=".xlsx, .xls" class="hidden">
@@ -281,7 +284,12 @@
             <div id="admin-tab-students" class="admin-tab-content hidden">
                 <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
                     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <h3 class="text-lg font-semibold text-gray-800">รายชื่อนักเรียนทั้งหมด</h3>
+                        <div class="flex items-center gap-3">
+                            <h3 class="text-lg font-semibold text-gray-800">รายชื่อนักเรียนทั้งหมด</h3>
+                            <button onclick="addStudent()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition shadow flex items-center">
+                                + เพิ่มนักเรียน
+                            </button>
+                        </div>
                         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                             <select id="admin-filter-status" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                                 <option value="all">ทั้งหมด (All)</option>
@@ -421,12 +429,16 @@
                                 <span>1. ล้างเฉพาะข้อมูล <b>"นักเรียน"</b></span>
                                 <span class="text-xs">ลบรายชื่อ & การลงทะเบียน</span>
                             </button>
+                            <button onclick="clearSystemData('subjects')" class="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 border border-orange-300 py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center">
+                                <span>2. ล้างเฉพาะข้อมูล <b>"วิชา"</b></span>
+                                <span class="text-xs">ลบรายวิชา & รีเซ็ตการลงทะเบียนนักเรียน</span>
+                            </button>
                             <button onclick="clearSystemData('staff')" class="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 border border-orange-300 py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center">
-                                <span>2. ล้างเฉพาะข้อมูล <b>"ครู/บุคลากร"</b></span>
+                                <span>3. ล้างเฉพาะข้อมูล <b>"ครู/บุคลากร"</b></span>
                                 <span class="text-xs">ยกเว้น Admin หลัก</span>
                             </button>
                             <button onclick="clearSystemData('all')" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center shadow-sm">
-                                <span>3. ล้างข้อมูล <b>"ทั้งหมดในระบบ"</b></span>
+                                <span>4. ล้างข้อมูล <b>"ทั้งหมดในระบบ"</b></span>
                                 <span class="text-xs">รีเซ็ตทุกอย่าง (วิชา, นักเรียน, ครู)</span>
                             </button>
                         </div>
@@ -1257,6 +1269,105 @@
             }
         };
 
+        // Add Subject Manually
+        window.addSubject = async () => {
+            const { value: formValues } = await Swal.fire({
+                title: 'เพิ่มรายวิชาใหม่',
+                html: `
+                    <div class="space-y-3 text-left">
+                        <div><label class="text-sm font-bold">รหัสวิชา (ต้องไม่ซ้ำ)</label><input id="swal-a-id" class="swal2-input !m-0 !mt-1 !w-full" placeholder="เช่น ENG101"></div>
+                        <div><label class="text-sm font-bold">ชื่อวิชา</label><input id="swal-a-name" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        <div><label class="text-sm font-bold">ผู้สอน</label><input id="swal-a-teacher" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        <div><label class="text-sm font-bold">สถานที่</label><input id="swal-a-loc" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        <div><label class="text-sm font-bold">จำนวนรับรวม</label><input id="swal-a-total" type="number" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        <div><label class="text-sm font-bold">ระดับชั้น (เช่น 4,5 หรือ all)</label><input id="swal-a-grade" class="swal2-input !m-0 !mt-1 !w-full" value="all"></div>
+                        <div><label class="text-sm font-bold">ห้อง (เช่น 1,2 หรือ all)</label><input id="swal-a-room" class="swal2-input !m-0 !mt-1 !w-full" value="all"></div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'เพิ่มวิชา',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const id = document.getElementById('swal-a-id').value.trim();
+                    if (!id) {
+                        Swal.showValidationMessage('กรุณากรอกรหัสวิชา');
+                        return false;
+                    }
+                    return {
+                        id: id,
+                        subject_name: document.getElementById('swal-a-name').value,
+                        teacher: document.getElementById('swal-a-teacher').value || '-',
+                        location: document.getElementById('swal-a-loc').value || '-',
+                        total_slots: parseInt(document.getElementById('swal-a-total').value) || 0,
+                        remaining_slots: parseInt(document.getElementById('swal-a-total').value) || 0,
+                        allowed_grades: document.getElementById('swal-a-grade').value || 'all',
+                        allowed_rooms: document.getElementById('swal-a-room').value || 'all'
+                    }
+                }
+            });
+
+            if (formValues) {
+                try {
+                    const docRef = doc(db, getPath('subjects'), formValues.id);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) return Swal.fire('ข้อผิดพลาด', 'รหัสวิชานี้มีอยู่ในระบบแล้ว', 'error');
+                    
+                    delete formValues.id;
+                    await setDoc(docRef, formValues);
+                    Swal.fire('สำเร็จ', 'เพิ่มวิชาเรียบร้อยแล้ว', 'success');
+                } catch(e) { Swal.fire('Error', e.message, 'error'); }
+            }
+        };
+
+        // Add Student Manually
+        window.addStudent = async () => {
+            const { value: formValues } = await Swal.fire({
+                title: 'เพิ่มนักเรียนใหม่',
+                html: `
+                    <div class="space-y-3 text-left">
+                        <div><label class="text-sm font-bold">รหัสนักเรียน (ชื่อผู้ใช้)</label><input id="swal-u-id" class="swal2-input !m-0 !mt-1 !w-full" placeholder="เช่น 66001"></div>
+                        <div><label class="text-sm font-bold">ชื่อ-นามสกุล</label><input id="swal-u-name" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        <div class="flex gap-2">
+                            <div class="w-1/2"><label class="text-sm font-bold">ระดับชั้น</label><input id="swal-u-grade" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                            <div class="w-1/2"><label class="text-sm font-bold">ห้อง</label><input id="swal-u-room" class="swal2-input !m-0 !mt-1 !w-full"></div>
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'เพิ่มนักเรียน',
+                cancelButtonText: 'ยกเลิก',
+                preConfirm: () => {
+                    const id = document.getElementById('swal-u-id').value.trim();
+                    if (!id) {
+                        Swal.showValidationMessage('กรุณากรอกรหัสนักเรียน');
+                        return false;
+                    }
+                    return {
+                        id: id,
+                        name: document.getElementById('swal-u-name').value || 'Unknown',
+                        grade: document.getElementById('swal-u-grade').value || '',
+                        room: document.getElementById('swal-u-room').value || '',
+                        status: 'unregistered',
+                        registered_subject_id: null
+                    }
+                }
+            });
+
+            if (formValues) {
+                try {
+                    const docRef = doc(db, getPath('students'), formValues.id);
+                    const snap = await getDoc(docRef);
+                    if (snap.exists()) return Swal.fire('ข้อผิดพลาด', 'รหัสนักเรียนนี้มีอยู่ในระบบแล้ว', 'error');
+                    
+                    delete formValues.id;
+                    await setDoc(docRef, formValues);
+                    Swal.fire('สำเร็จ', 'เพิ่มนักเรียนเรียบร้อยแล้ว', 'success');
+                } catch(e) { Swal.fire('Error', e.message, 'error'); }
+            }
+        };
+
         function renderAdminDetailedStats() {
             const tbody = document.getElementById('admin-detailed-stats');
             tbody.innerHTML = '';
@@ -1368,6 +1479,7 @@
         window.clearSystemData = async (type) => {
             const typeNames = {
                 'students': 'ล้างเฉพาะข้อมูล "นักเรียน"',
+                'subjects': 'ล้างเฉพาะข้อมูล "วิชา"',
                 'staff': 'ล้างเฉพาะข้อมูล "บุคลากร" (ยกเว้นแอดมินหลัก)',
                 'all': 'ล้างข้อมูล "ทั้งหมด" ในระบบ'
             };
@@ -1418,12 +1530,33 @@
                             await b.commit();
                         }
                     }
+                    if (type === 'subjects' || type === 'all') {
+                        await deleteCollection('subjects');
+                        // Unregister all students if subjects are cleared but students remain
+                        if (type === 'subjects') {
+                            let b = writeBatch(db);
+                            let count = 0;
+                            let bArr = [];
+                            studentsList.forEach(s => {
+                                if(s.status === 'registered') {
+                                    b.update(doc(db, getPath('students'), s.id), { status: 'unregistered', registered_subject_id: null });
+                                    count++;
+                                    if(count === 400) {
+                                        bArr.push(b);
+                                        b = writeBatch(db);
+                                        count = 0;
+                                    }
+                                }
+                            });
+                            if (count > 0) bArr.push(b);
+                            for(let batch of bArr) await batch.commit();
+                        }
+                    }
                     if (type === 'staff' || type === 'all') {
                         // Delete staff EXCEPT 'admin'
                         await deleteCollection('staff', (d) => d.id !== 'admin');
                     }
                     if (type === 'all') {
-                        await deleteCollection('subjects');
                         // Reset settings
                         await setDoc(doc(db, getPath('settings'), 'system'), { isOpen: false, startTime: Date.now(), endTime: Date.now() + 86400000 });
                     }
