@@ -1665,6 +1665,25 @@
             XLSX.writeFile(wb, `Report_All_${new Date().getTime()}.xlsx`);
         });
 
+        // --- เพิ่มโค้ดส่วนที่หายไปตรงนี้ ---
+        document.getElementById('btn-export-unreg').addEventListener('click', () => {
+            const unregList = studentsList.filter(s => s.status !== 'registered');
+            if (unregList.length === 0) return Swal.fire('ข้อมูลครบถ้วน', 'นักเรียนทุกคนลงทะเบียนเรียบร้อยแล้ว!', 'success');
+
+            const exportData = unregList.map((stu, i) => ({
+                'ลำดับ': i + 1,
+                'รหัสนักเรียน': stu.id,
+                'ชื่อ-นามสกุล': stu.name,
+                'ระดับชั้น': stu.grade || '',
+                'ห้อง': stu.room || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "ยังไม่ลงทะเบียน");
+            XLSX.writeFile(wb, `รายชื่อนักเรียนที่ยังไม่ลงทะเบียน_${new Date().getTime()}.xlsx`);
+        });
+        // -----------------------------
+
         // Admin: Manage Staff
         document.getElementById('staff-role').addEventListener('change', (e) => {
             const isTeacher = e.target.value === 'teacher';
