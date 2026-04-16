@@ -1592,7 +1592,9 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     
                     let count = 0;
-                    const batch = writeBatch(db);
+                    let totalCount = 0;
+                    let batch = writeBatch(db);
+                    let batches = [];
 
                     if (isSubject) {
                         // Find first sheet
@@ -1611,6 +1613,12 @@
                                     allowed_rooms: String(row.allowed_rooms || 'all')
                                 }, { merge: true });
                                 count++;
+                                totalCount++;
+                                if (count === 400) {
+                                    batches.push(batch);
+                                    batch = writeBatch(db);
+                                    count = 0;
+                                }
                             }
                         });
                     } else {
@@ -1627,13 +1635,24 @@
                                     registered_subject_id: null
                                 }, { merge: true });
                                 count++;
+                                totalCount++;
+                                if (count === 400) {
+                                    batches.push(batch);
+                                    batch = writeBatch(db);
+                                    count = 0;
+                                }
                             }
                         });
                     }
 
-                    if (count > 0) await batch.commit();
-                    Swal.fire('สำเร็จ', `นำเข้าข้อมูล ${count} รายการ สำเร็จ`, 'success');
-                } catch (err) { Swal.fire('เกิดข้อผิดพลาด', 'รูปแบบไฟล์ไม่ถูกต้อง', 'error'); }
+                    if (count > 0) batches.push(batch);
+                    
+                    for (let b of batches) {
+                        await b.commit();
+                    }
+
+                    Swal.fire('สำเร็จ', `นำเข้าข้อมูล ${totalCount} รายการ สำเร็จ`, 'success');
+                } catch (err) { Swal.fire('เกิดข้อผิดพลาด', 'รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาดในการนำเข้า', 'error'); console.error(err); }
                 e.target.value = '';
             };
             reader.readAsArrayBuffer(file);
