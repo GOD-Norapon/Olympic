@@ -497,25 +497,39 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, runTransaction, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "", authDomain: "olympic-d9b49.firebaseapp.com", projectId: "olympic-d9b49", storageBucket: "olympic-d9b49.firebasestorage.app", messagingSenderId: "476920174627", appId: "1:476920174627:web:fc127e313e9923b1f77996"
+        // 1. Safe Firebase Configuration Setup
+        const defaultFirebaseConfig = {
+            apiKey: "", 
+            authDomain: "olympic-d9b49.firebaseapp.com", 
+            projectId: "olympic-d9b49", 
+            storageBucket: "olympic-d9b49.firebasestorage.app", 
+            messagingSenderId: "476920174627", 
+            appId: "1:476920174627:web:fc127e313e9923b1f77996"
         };
+        
+        let firebaseConfig = defaultFirebaseConfig;
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) {
+            console.warn("Config parsing error, using default config.", e);
+        }
+
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'sw-olympic-regis-final';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        // Helper Path Rule
         const getPath = (col) => `artifacts/${appId}/public/data/${col}`;
 
-        // App State
+        // Global State
         let currentUser = null;
         let subjectsList = [];
         let studentsList = [];
         let staffList = [];
-        let systemSettings = { isOpen: false, startTime: null, endTime: null };
+        let systemSettings = { isOpen: false, startTime: Date.now(), endTime: Date.now() + 86400000 };
         let timerInterval = null;
 
         // --- Core Startup ---
@@ -529,22 +543,34 @@
 
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        const adminRef = doc(db, getPath('staff'), 'admin');
-                        const adminSnap = await getDoc(adminRef);
-                        if (!adminSnap.exists()) {
-                            await setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin', name: 'Super Admin' });
+                        try {
+                            const adminRef = doc(db, getPath('staff'), 'admin');
+                            const adminSnap = await getDoc(adminRef);
+                            if (!adminSnap.exists()) {
+                                await setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin', name: 'Super Admin' });
+                            }
+                        } catch (err) {
+                            console.warn("Bootstrap admin failed, continuing execution...", err);
+                        } finally {
+                            listenToSettings();
+                            
+                            const overlay = document.getElementById('loading-overlay');
+                            if (overlay) {
+                                overlay.classList.add('hidden');
+                            }
+                            
+                            showScreen('screen-login');
                         }
-
-                        listenToSettings();
-                        document.getElementById('loading-overlay').classList.add('hidden');
-                        showScreen('screen-login');
                     }
                 });
             } catch (err) {
                 console.error(err);
-                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Firestore ได้', 'error');
+                Swal.fire('Error', 'ไม่สามารถเชื่อมต่อ Firestore ได้: ' + err.message, 'error');
             }
         }
+
+        // IMPORTANT: Wait for DOM to be fully loaded before starting the App
+        window.addEventListener('DOMContentLoaded', initApp);
 
         function listenToSettings() {
             onSnapshot(doc(db, getPath('settings'), 'system'), (snap) => {
@@ -562,6 +588,8 @@
 
         function updateStatusDisplay() {
             const infoBox = document.getElementById('status-time-info');
+            if (!infoBox) return; // Safety check
+            
             const now = Date.now();
             const start = systemSettings.startTime || 0;
             const end = systemSettings.endTime || 0;
@@ -607,10 +635,15 @@
 
         function showScreen(id) {
             ['screen-login', 'screen-student', 'screen-teacher', 'screen-admin', 'screen-receipt'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
+                const el = document.getElementById(s);
+                if(el) el.classList.add('hidden');
             });
-            document.getElementById(id).classList.remove('hidden');
-            document.getElementById('user-menu').classList.toggle('hidden', id === 'screen-login');
+            
+            const targetEl = document.getElementById(id);
+            if(targetEl) targetEl.classList.remove('hidden');
+            
+            const menuEl = document.getElementById('user-menu');
+            if(menuEl) menuEl.classList.toggle('hidden', id === 'screen-login');
         }
 
         // --- Auth Listeners ---
@@ -901,7 +934,7 @@
             const progress = document.getElementById('cat-progress');
             const text = document.getElementById('timer-text');
             const label = document.getElementById('timer-label');
-            if (!runner) return;
+            if (!runner || !progress || !text || !label) return;
 
             const tick = () => {
                 const now = Date.now();
@@ -1199,7 +1232,7 @@
             const stats = {};
             studentsList.forEach(s => {
                 const key = `ม.${s.grade || '?'}/${s.room || '?'}`;
-                if(!stats[key]) stats[key] = { total: 0, reg: 0, sKey: (s.grade||"99").padStart(2,'0')+(s.room||"99").padStart(2,'0') };
+                if(!stats[key]) stats[key] = { total: 0, reg: 0, sKey: String(s.grade||"99").padStart(2,'0')+String(s.room||"99").padStart(2,'0') };
                 stats[key].total++;
                 if(s.status === 'registered') stats[key].reg++;
             });
@@ -1558,8 +1591,6 @@
             return r.isConfirmed;
         }
 
-        // Start 
-        initApp();
     </script>
 </body>
 </html>
