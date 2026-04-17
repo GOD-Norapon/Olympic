@@ -21,8 +21,8 @@
         .hidden { display: none !important; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Cat Animation utilities */
         .cat-runner { transition: left 1s linear; }
+        .tab-active { color: #2563eb; border-bottom: 2px solid #2563eb; font-weight: 600; }
     </style>
 </head>
 <body class="text-gray-800">
@@ -30,7 +30,7 @@
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="loader mb-4"></div>
-        <p class="text-lg font-semibold text-blue-600">กำลังเชื่อมต่อระบบ...</p>
+        <p class="text-lg font-semibold text-blue-600">กำลังเชื่อมต่อระบบฐานข้อมูล...</p>
     </div>
 
     <!-- Navbar -->
@@ -38,10 +38,10 @@
         <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 font-bold text-xl tracking-wide flex items-center">
-                    🏅 SW Olympic
+                    🏅 SW Olympic Registration
                 </div>
                 <div id="user-menu" class="hidden flex items-center space-x-4">
-                    <span id="nav-username" class="text-sm font-medium"></span>
+                    <span id="nav-username" class="text-sm font-medium hidden sm:inline"></span>
                     <button id="btn-logout" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-md text-sm transition shadow">ออกจากระบบ</button>
                 </div>
             </div>
@@ -52,869 +52,766 @@
     <main class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- 1. Login Screen -->
-        <div id="screen-login" class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden hidden">
-            <div class="flex border-b">
-                <button id="tab-student" class="flex-1 py-4 text-center font-semibold text-blue-600 border-b-2 border-blue-600 focus:outline-none">นักเรียน</button>
-                <button id="tab-staff" class="flex-1 py-4 text-center font-semibold text-gray-500 hover:text-blue-600 focus:outline-none">บุคลากร (ครู/แอดมิน)</button>
+        <div id="screen-login" class="max-w-md mx-auto hidden">
+            <!-- System Status Info -->
+            <div id="login-system-status" class="mb-4 bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <h3 class="font-bold text-gray-700 text-sm mb-2 flex items-center">
+                    <span class="mr-2">📢</span> กำหนดการลงทะเบียน
+                </h3>
+                <div id="status-time-info" class="text-xs text-gray-600 space-y-1.5">
+                    <p class="animate-pulse">กำลังตรวจสอบสถานะระบบ...</p>
+                </div>
             </div>
-            
-            <div class="p-8">
-                <!-- Student Login -->
-                <form id="form-student-login" class="space-y-6">
-                    <div class="bg-blue-50 text-blue-800 text-sm p-3 rounded-md border border-blue-200">
-                        💡 <b>หมายเหตุ:</b> ให้นักเรียนใช้ <u>เลขประจำตัวนักเรียน</u> กรอกทั้งในช่องชื่อผู้ใช้และรหัสผ่าน
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">เลขประจำตัวนักเรียน (ชื่อผู้ใช้)</label>
-                        <input type="text" id="login-student-id" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">เลขประจำตัวนักเรียน (รหัสผ่าน)</label>
-                        <input type="password" id="login-student-pass" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition shadow-sm">เข้าสู่ระบบนักเรียน</button>
-                </form>
 
-                <!-- Staff Login -->
-                <form id="form-staff-login" class="space-y-6 hidden">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้ (Username)</label>
-                        <input type="text" id="login-staff-user" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">รหัสผ่าน (Password)</label>
-                        <input type="password" id="login-staff-pass" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md font-medium transition shadow-sm">เข้าสู่ระบบบุคลากร</button>
-                </form>
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                <div class="flex border-b">
+                    <button id="tab-student" class="flex-1 py-4 text-center font-semibold tab-active focus:outline-none transition">นักเรียน</button>
+                    <button id="tab-staff" class="flex-1 py-4 text-center font-semibold text-gray-500 hover:text-blue-600 focus:outline-none transition">บุคลากร</button>
+                </div>
+                
+                <div class="p-8">
+                    <!-- Student Login -->
+                    <form id="form-student-login" class="space-y-6">
+                        <div class="bg-blue-50 text-blue-800 text-xs p-3 rounded-md border border-blue-100 leading-relaxed">
+                            💡 <b>คำแนะนำ:</b> ให้นักเรียนกรอก <u>เลขประจำตัวนักเรียน</u> ทั้งในช่องชื่อผู้ใช้และรหัสผ่าน หากจำไม่ได้กรุณาติดต่อครูที่ปรึกษา
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">เลขประจำตัวนักเรียน (Username)</label>
+                            <input type="text" id="login-student-id" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">รหัสผ่าน (เลขประจำตัวนักเรียน)</label>
+                            <input type="password" id="login-student-pass" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-md font-medium transition shadow-sm">เข้าสู่ระบบนักเรียน</button>
+                    </form>
+
+                    <!-- Staff Login -->
+                    <form id="form-staff-login" class="space-y-6 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้ (Username)</label>
+                            <input type="text" id="login-staff-user" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">รหัสผ่าน (Password)</label>
+                            <input type="password" id="login-staff-pass" required class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-md font-medium transition shadow-sm">เข้าสู่ระบบบุคลากร</button>
+                    </form>
+                </div>
             </div>
         </div>
 
         <!-- 2. Student Dashboard -->
-        <div id="screen-student" class="hidden">
+        <div id="screen-student" class="hidden max-w-6xl mx-auto">
             <!-- Cat Timer Animation -->
-            <div id="timer-container" class="mb-6 bg-white p-4 rounded-xl shadow border border-gray-200 hidden">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-gray-700">ระยะเวลาการลงทะเบียน</span>
-                    <span id="timer-text" class="text-sm font-medium text-blue-600">กำลังคำนวณ...</span>
+            <div id="timer-container" class="mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-200 hidden">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-bold text-gray-700 flex items-center">
+                        <svg class="w-4 h-4 mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        ระยะเวลาที่เหลือในการตัดสินใจ
+                    </span>
+                    <span id="timer-text" class="text-sm font-bold text-blue-600">กำลังคำนวณ...</span>
                 </div>
-                <div class="relative w-full h-8 bg-gray-100 rounded-full overflow-hidden border border-gray-300">
+                <div class="relative w-full h-8 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
                     <div class="absolute top-0 right-0 h-full w-8 flex items-center justify-center text-xl z-10">🏁</div>
                     <div id="cat-icon" class="cat-runner absolute top-0 text-2xl z-20" style="left: 0%; transform: scaleX(-1);">🐈</div>
-                    <!-- Progress fill -->
-                    <div id="cat-progress" class="absolute top-0 left-0 h-full bg-green-200 transition-all duration-1000" style="width: 0%;"></div>
+                    <div id="cat-progress" class="absolute top-0 left-0 h-full bg-blue-100 transition-all duration-1000" style="width: 0%;"></div>
                 </div>
             </div>
 
-            <!-- Registration Status Alert -->
-            <div id="student-status-alert" class="mb-6 p-4 rounded-lg hidden"></div>
+            <div id="student-status-alert" class="mb-8 hidden"></div>
 
-            <div class="flex justify-between items-end mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-800">รายวิชาที่เปิดรับลงทะเบียน</h2>
-                    <p class="text-gray-600 mt-1">สามารถเปลี่ยนรายวิชาได้จนกว่าระบบจะปิด</p>
+                    <h2 class="text-2xl font-bold text-gray-800">เลือกรายวิชาที่คุณต้องการ</h2>
+                    <p class="text-gray-500 text-sm mt-1">สามารถเลือกได้เพียง 1 วิชา และสามารถเปลี่ยนใจได้จนกว่าจะหมดเวลา</p>
                 </div>
+                <div id="student-info-tag" class="bg-gray-100 px-3 py-1 rounded text-xs font-medium text-gray-600"></div>
             </div>
 
-            <!-- Subject Grid -->
             <div id="subject-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Subjects will be injected here -->
+                <!-- รายวิชาจะถูกแสดงที่นี่ -->
             </div>
         </div>
 
         <!-- 3. Receipt View -->
         <div id="screen-receipt" class="hidden max-w-2xl mx-auto">
-            <div class="flex justify-end mb-4 space-x-3">
-                <button id="btn-back-dashboard" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md font-medium transition">กลับหน้าหลัก</button>
-                <button id="btn-download-pdf" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition shadow flex items-center">
+            <div class="flex justify-between items-center mb-6">
+                <button id="btn-back-dashboard" class="text-blue-600 font-medium flex items-center hover:underline">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    กลับไปหน้าเลือกวิชา
+                </button>
+                <button id="btn-download-pdf" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition shadow flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    บันทึกเป็น PDF
+                    บันทึกรูปภาพ/PDF
                 </button>
             </div>
-
-            <div id="receipt-card" class="bg-white p-8 rounded-xl shadow-lg border-t-8 border-green-500">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            
+            <div id="receipt-card" class="bg-white p-10 rounded-2xl shadow-xl border-t-[10px] border-blue-600">
+                <div class="text-center mb-10">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-4">
+                        <span class="text-4xl text-blue-600">🏅</span>
                     </div>
                     <h2 class="text-3xl font-bold text-gray-800">ลงทะเบียนสำเร็จ</h2>
-                    <p class="text-gray-500 mt-2">หลักฐานการลงทะเบียน SW Olympic</p>
+                    <p class="text-gray-400 mt-2 tracking-wide">หลักฐานการยืนยันสิทธิ์ SW Olympic</p>
                 </div>
                 
-                <div class="space-y-4 border-t border-gray-200 pt-6">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">รหัสนักเรียน:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-student-id"></div>
+                <div class="space-y-6 border-y border-gray-100 py-8">
+                    <div class="grid grid-cols-3 gap-4 border-b border-gray-50 pb-3">
+                        <div class="text-gray-400 text-sm uppercase">รหัสนักเรียน</div>
+                        <div class="col-span-2 font-bold text-gray-700" id="receipt-student-id"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 border-b border-gray-50 pb-3">
+                        <div class="text-gray-400 text-sm uppercase">ชื่อ-นามสกุล</div>
+                        <div class="col-span-2 font-bold text-gray-700" id="receipt-student-name"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 border-b border-gray-50 pb-3">
+                        <div class="text-gray-400 text-sm uppercase">ชั้น / ห้อง</div>
+                        <div class="col-span-2 font-bold text-gray-700" id="receipt-student-class"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 border-b border-gray-50 pb-3">
+                        <div class="text-gray-400 text-sm uppercase">วิชาที่เลือก</div>
+                        <div class="col-span-2 font-bold text-blue-600 text-xl" id="receipt-subject-name"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 border-b border-gray-50 pb-3">
+                        <div class="text-gray-400 text-sm uppercase">สถานที่เรียน</div>
+                        <div class="col-span-2 font-bold text-gray-700" id="receipt-location"></div>
                     </div>
                     <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">ชื่อ-นามสกุล:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-student-name"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">ชั้น/ห้อง:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-student-class"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">วิชาที่เลือก:</div>
-                        <div class="col-span-2 font-semibold text-blue-600 text-lg" id="receipt-subject-name"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">สถานที่เรียน:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-location"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">ผู้สอน:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-teacher"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-gray-500">เวลาที่ลงทะเบียน:</div>
-                        <div class="col-span-2 font-semibold text-gray-800" id="receipt-timestamp"></div>
+                        <div class="text-gray-400 text-sm uppercase">เวลาที่ลงทะเบียน</div>
+                        <div class="col-span-2 font-bold text-gray-500" id="receipt-timestamp"></div>
                     </div>
                 </div>
+
+                <div class="mt-8 text-center">
+                    <div class="text-[10px] text-gray-300 uppercase tracking-widest">Digital Certificate Verification Code</div>
+                    <div class="text-xs font-mono text-gray-400 mt-1" id="receipt-verify-code"></div>
+                </div>
             </div>
+            <p class="text-center text-gray-400 text-xs mt-6 italic">* กรุณาบันทึกภาพหน้าจอนี้ไว้เพื่อใช้เป็นหลักฐานในการเข้าเรียน</p>
         </div>
 
         <!-- 4. Teacher Dashboard -->
-        <div id="screen-teacher" class="hidden">
+        <div id="screen-teacher" class="hidden max-w-6xl mx-auto">
             <div class="bg-white rounded-xl shadow p-6 mb-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">รายวิชาที่คุณรับผิดชอบ</h2>
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-gray-800">ระบบเช็ครายชื่อนักเรียน</h2>
+                    <button id="btn-teacher-export" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition shadow flex items-center opacity-50 cursor-not-allowed" disabled>
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        ส่งออกรายชื่อ (Excel)
+                    </button>
+                </div>
                 
-                <!-- Filter Section -->
-                <div class="flex flex-col md:flex-row gap-4 items-end mb-4 border-b pb-6">
-                    <div class="w-full md:w-1/3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 border-b pb-6">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">1. เลือกระดับชั้น</label>
-                        <select id="teacher-filter-grade" class="block w-full px-3 py-2 border border-gray-300 rounded-md">
-                            <option value="">-- กรุณาเลือกระดับชั้น --</option>
-                            <!-- Injected by JS -->
-                        </select>
+                        <select id="teacher-filter-grade" class="block w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-200 transition"></select>
                     </div>
-                    <div class="w-full md:w-1/3">
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">2. เลือกรายวิชา</label>
-                        <select id="teacher-filter-subject" class="block w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
+                        <select id="teacher-filter-subject" class="block w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-200 transition" disabled>
                             <option value="">-- กรุณาเลือกวิชา --</option>
-                            <!-- Injected by JS -->
                         </select>
-                    </div>
-                    <div class="w-full md:w-1/3 flex justify-end">
-                        <button id="btn-teacher-export" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition shadow flex items-center opacity-50 cursor-not-allowed" disabled>
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            ส่งออกรายชื่อ (Excel)
-                        </button>
                     </div>
                 </div>
 
-                <!-- Subjects Container (Single Subject View) -->
                 <div id="teacher-subjects-container">
-                    <p class="text-center text-gray-500 py-8">กรุณาเลือกระดับชั้นและวิชาเพื่อดูรายชื่อนักเรียน</p>
+                    <div class="text-center py-12 text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        <p>กรุณาเลือกระดับชั้นและวิชาเพื่อแสดงรายชื่อ</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 5. Admin Dashboard -->
-        <div id="screen-admin" class="hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">แผงควบคุมผู้ดูแลระบบ (Admin)</h2>
+        <div id="screen-admin" class="hidden max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">แผงควบคุมผู้ดูแลระบบ</h2>
             
-            <!-- Admin Tabs -->
-            <div class="flex space-x-2 border-b border-gray-200 mb-6 overflow-x-auto">
-                <button class="admin-tab-btn active px-4 py-2 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-overview">ภาพรวม & ข้อมูลวิชา</button>
-                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-students">ข้อมูลนักเรียน</button>
-                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-stats">สถิติแบบละเอียด</button>
-                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-users">จัดการบุคลากร</button>
-                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-settings">ตั้งค่าระบบ</button>
+            <div class="flex space-x-1 border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
+                <button class="admin-tab-btn px-4 py-2 text-blue-600 border-b-2 border-blue-600 font-medium whitespace-nowrap active" data-target="admin-tab-overview">📊 ภาพรวม</button>
+                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-subjects">📘 จัดการวิชา</button>
+                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-students">🧑‍🎓 จัดการนักเรียน</button>
+                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-stats">📈 สถิติละเอียด</button>
+                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-users">👮 ครู/แอดมิน</button>
+                <button class="admin-tab-btn px-4 py-2 text-gray-500 hover:text-blue-600 font-medium whitespace-nowrap" data-target="admin-tab-settings">⚙️ ตั้งค่าระบบ</button>
             </div>
 
-            <!-- Tab: Overview & Subjects -->
+            <!-- Tab: Overview -->
             <div id="admin-tab-overview" class="admin-tab-content">
-                <div class="flex flex-wrap gap-2 justify-end mb-4">
-                    <button id="btn-download-template" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition border">โหลด Template Excel</button>
-                    
-                    <!-- Single Add Button -->
-                    <button onclick="addSubject()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">+ เพิ่มวิชา</button>
-
-                    <!-- Separate Upload Buttons -->
-                    <button onclick="document.getElementById('excel-upload-subjects').click()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">นำเข้าข้อมูลวิชา</button>
-                    <input type="file" id="excel-upload-subjects" accept=".xlsx, .xls" class="hidden">
-                    
-                    <button onclick="document.getElementById('excel-upload-students').click()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">นำเข้าข้อมูลนักเรียน</button>
-                    <input type="file" id="excel-upload-students" accept=".xlsx, .xls" class="hidden">
-                    
-                    <button id="btn-export-all-data" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition shadow flex items-center">ส่งออกข้อมูลทั้งหมด</button>
-                </div>
-
-                <!-- Stats Basic -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-xl shadow border-l-4 border-blue-500">
-                        <div class="text-gray-500 text-sm font-medium">นักเรียนทั้งหมด</div>
-                        <div class="text-3xl font-bold text-gray-800 mt-1" id="stat-total-students">0</div>
+                        <div class="text-gray-400 text-sm font-medium">นักเรียนในฐานข้อมูล</div>
+                        <div class="text-3xl font-bold text-gray-800" id="stat-total-students">0</div>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow border-l-4 border-green-500">
-                        <div class="text-gray-500 text-sm font-medium">ลงทะเบียนแล้ว</div>
-                        <div class="text-3xl font-bold text-gray-800 mt-1" id="stat-registered">0</div>
+                        <div class="text-gray-400 text-sm font-medium">ยืนยันสิทธิ์แล้ว</div>
+                        <div class="text-3xl font-bold text-gray-800" id="stat-registered">0</div>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow border-l-4 border-red-500">
-                        <div class="text-gray-500 text-sm font-medium">ยังไม่ลงทะเบียน</div>
-                        <div class="text-3xl font-bold text-gray-800 mt-1" id="stat-unregistered">0</div>
+                        <div class="text-gray-400 text-sm font-medium">ยังไม่ดำเนินการ</div>
+                        <div class="text-3xl font-bold text-gray-800" id="stat-unregistered">0</div>
                     </div>
                 </div>
 
-                <!-- Subject Monitoring Table -->
-                <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">สถานะและข้อมูลรายวิชา</h3>
-                    </div>
-                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0 z-10">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">รหัสวิชา</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อวิชา</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ผู้สอน</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">สถานที่</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">รับ/เหลือ</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-subject-list" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Students -->
-            <div id="admin-tab-students" class="admin-tab-content hidden">
-                <div class="bg-white rounded-xl shadow overflow-hidden mb-8">
-                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div class="flex items-center gap-3">
-                            <h3 class="text-lg font-semibold text-gray-800">รายชื่อนักเรียนทั้งหมด</h3>
-                            <button onclick="addStudent()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition shadow flex items-center">
-                                + เพิ่มนักเรียน
-                            </button>
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                            <select id="admin-filter-status" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                <option value="all">ทั้งหมด (All)</option>
-                                <option value="registered">ลงทะเบียนแล้ว</option>
-                                <option value="unregistered">ยังไม่ลงทะเบียน</option>
-                            </select>
-                            <input type="text" id="admin-search-student" placeholder="ค้นหารหัส หรือ ชื่อ..." class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-64">
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 sticky top-0 z-10">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัส</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อ-นามสกุล</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชั้น/ห้อง</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วิชาที่ได้</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admin-student-list" class="bg-white divide-y divide-gray-200">
-                                <!-- Injected via JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab: Detailed Stats -->
-            <div id="admin-tab-stats" class="admin-tab-content hidden">
-                <div class="bg-white rounded-xl shadow p-6 mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">สรุปการลงทะเบียนแยกตาม ชั้น/ห้อง</h3>
-                        <button id="btn-export-unreg" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition shadow">Export คนยังไม่ลงทะเบียน</button>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700">ลำดับวิชายอดนิยม (จำนวนคนลงทะเบียน)</h3>
+                        <button id="btn-export-all-data" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded hover:bg-green-700">ส่งออกข้อมูลรวม (Excel)</button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชั้น/ห้อง</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">ทั้งหมด</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase text-green-600">ลงแล้ว</th>
-                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase text-red-600">ยังไม่ลง</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">รหัสวิชา</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อวิชา</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ที่นั่ง (จอง/ทั้งหมด)</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">สถานะ</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-detailed-stats" class="bg-white divide-y divide-gray-200"></tbody>
+                            <tbody id="admin-overview-subject-list" class="bg-white divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Manage Users -->
+            <!-- Tab: Subjects -->
+            <div id="admin-tab-subjects" class="admin-tab-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700">จัดการข้อมูลรายวิชา</h3>
+                    <div class="space-x-2">
+                        <button onclick="addSubject()" class="bg-blue-600 text-white text-xs px-3 py-2 rounded">+ เพิ่มวิชา</button>
+                        <button onclick="document.getElementById('excel-upload-subjects').click()" class="bg-gray-100 border text-gray-700 text-xs px-3 py-2 rounded">นำเข้าไฟล์ Excel</button>
+                        <input type="file" id="excel-upload-subjects" accept=".xlsx, .xls" class="hidden">
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">รหัส</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อวิชา / ผู้สอน</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จำนวนรับ</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">ระดับชั้นที่รับ</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-subject-manage-list" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Students -->
+            <div id="admin-tab-students" class="admin-tab-content hidden">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="text" id="admin-search-student" placeholder="ค้นหาชื่อ หรือ รหัสนักเรียน..." class="px-3 py-2 border rounded-md text-sm outline-none w-full md:w-64">
+                        <select id="admin-filter-status" class="px-3 py-2 border rounded-md text-sm outline-none">
+                            <option value="all">สถานะทั้งหมด</option>
+                            <option value="registered">ลงทะเบียนแล้ว</option>
+                            <option value="unregistered">ยังไม่ลงทะเบียน</option>
+                        </select>
+                    </div>
+                    <div class="space-x-2 w-full md:w-auto flex justify-end">
+                        <button onclick="addStudent()" class="bg-blue-600 text-white text-xs px-3 py-2 rounded">+ เพิ่มรายชื่อ</button>
+                        <button onclick="document.getElementById('excel-upload-students').click()" class="bg-gray-100 border text-gray-700 text-xs px-3 py-2 rounded">นำเข้าไฟล์ Excel</button>
+                        <input type="file" id="excel-upload-students" accept=".xlsx, .xls" class="hidden">
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">รหัส</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">ชั้น/ห้อง</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">วิชาที่เลือก</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-student-manage-list" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Stats -->
+            <div id="admin-tab-stats" class="admin-tab-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700">สรุปการลงทะเบียนแยกตาม ชั้น/ห้อง</h3>
+                    <button id="btn-export-unreg" class="bg-yellow-500 text-white text-xs px-3 py-2 rounded hover:bg-yellow-600">Export คนยังไม่ลงทะเบียน</button>
+                </div>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ระดับชั้น/ห้อง</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จำนวนนักเรียน</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase text-green-600">ลงแล้ว</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase text-red-500">ยังไม่ลง</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">% สำเร็จ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-detailed-stats" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Users -->
             <div id="admin-tab-users" class="admin-tab-content hidden">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white rounded-xl shadow p-6 lg:col-span-1">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4">เพิ่ม/แก้ไข บุคลากร</h3>
+                    <div class="bg-white p-6 rounded-xl shadow h-fit">
+                        <h4 class="font-bold text-gray-700 mb-4">เพิ่ม/แก้ไข บุคลากร</h4>
                         <form id="form-manage-staff" class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้ (Username)</label>
-                                <input type="text" id="staff-user" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">ชื่อผู้ใช้ (Username)</label>
+                                <input type="text" id="staff-user" required class="w-full border p-2 rounded text-sm outline-none">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
-                                <input type="text" id="staff-pass" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">รหัสผ่าน</label>
+                                <input type="text" id="staff-pass" required class="w-full border p-2 rounded text-sm outline-none">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">ชื่อ-นามสกุล</label>
-                                <input type="text" id="staff-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">ชื่อ-นามสกุล</label>
+                                <input type="text" id="staff-name" required class="w-full border p-2 rounded text-sm outline-none">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">บทบาท</label>
-                                <select id="staff-role" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">บทบาท</label>
+                                <select id="staff-role" class="w-full border p-2 rounded text-sm outline-none">
                                     <option value="teacher">ครูผู้สอน (Teacher)</option>
                                     <option value="admin">ผู้ดูแลระบบ (Admin)</option>
                                 </select>
                             </div>
                             <div id="div-staff-subject">
-                                <label class="block text-sm font-medium text-gray-700">รหัสวิชาที่รับผิดชอบ (เฉพาะครู)</label>
-                                <input type="text" id="staff-subject" placeholder="เช่น ENG101, ENG102" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <label class="block text-xs font-bold text-gray-500 uppercase">รหัสวิชาที่รับผิดชอบ (ระบุรหัสวิชา)</label>
+                                <input type="text" id="staff-subject" placeholder="เช่น ART101, ART102" class="w-full border p-2 rounded text-sm outline-none">
                             </div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-medium">บันทึกข้อมูล</button>
+                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded text-sm font-bold">บันทึกข้อมูล</button>
                         </form>
                     </div>
-                    <div class="bg-white rounded-xl shadow overflow-hidden lg:col-span-2">
-                        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                            <h3 class="text-lg font-semibold text-gray-800">รายชื่อบุคลากรในระบบ</h3>
-                        </div>
-                        <div class="overflow-x-auto max-h-96">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อ</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">บทบาท</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">วิชาที่สอน</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">ลบ</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="admin-staff-list" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อบุคลากร</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">บทบาท</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-staff-list" class="divide-y divide-gray-200"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- Tab: Settings -->
             <div id="admin-tab-settings" class="admin-tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- General Settings -->
-                    <div class="bg-white rounded-xl shadow p-6">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-6">ตั้งค่าระบบการลงทะเบียน</h3>
-                        <div class="space-y-6">
-                            <div class="flex items-center justify-between border-b pb-4">
-                                <div>
-                                    <div class="font-medium text-gray-800">สถานะระบบ</div>
-                                    <div class="text-sm text-gray-500">เปิด-ปิด การให้นักเรียนกดลงทะเบียน/เปลี่ยนวิชา</div>
-                                </div>
-                                <button id="toggle-system-status" class="px-4 py-2 rounded-full font-bold transition-colors bg-gray-300 text-gray-700">ปิดระบบอยู่</button>
+                <div class="max-w-2xl bg-white rounded-xl shadow p-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">ตั้งค่าเวลาเปิด-ปิดระบบอัตโนมัติ</h3>
+                    
+                    <div class="space-y-8">
+                        <div class="flex items-center justify-between border-b pb-6">
+                            <div>
+                                <div class="font-bold text-gray-700">สถานะระบบ (Manual Override)</div>
+                                <div class="text-sm text-gray-400">เปิด-ปิดระบบทันทีโดยไม่สนเวลา</div>
+                            </div>
+                            <button id="toggle-system-status" class="px-6 py-2 rounded-full font-bold transition-all shadow-sm"></button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">เวลาเริ่มเปิดรับ (Start Time)</label>
+                                <input type="datetime-local" id="system-start-time" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-100 transition">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุดการลงทะเบียน (Deadline)</label>
-                                <input type="datetime-local" id="system-end-time" class="block w-full px-3 py-2 border border-gray-300 rounded-md mb-2">
-                                <p class="text-xs text-gray-500">ใช้สำหรับการคำนวณหลอดพลังงานแอนิเมชันของแมว</p>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">เวลาสิ้นสุด (Deadline)</label>
+                                <input type="datetime-local" id="system-end-time" class="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-blue-100 transition">
                             </div>
-                            <button id="btn-save-settings" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-medium">บันทึกการตั้งค่า</button>
                         </div>
+
+                        <button id="btn-save-settings" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold shadow-md transition">บันทึกการตั้งค่าเวลา</button>
                     </div>
 
-                    <!-- Danger Zone -->
-                    <div class="bg-white rounded-xl shadow p-6 border-t-4 border-red-500">
-                        <h3 class="text-lg font-bold text-red-600 mb-4">Danger Zone (ล้างข้อมูล)</h3>
-                        <p class="text-sm text-gray-600 mb-6">ระวัง: ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้ กรุณา Export ข้อมูลก่อนทำการล้างระบบ</p>
-                        
-                        <div class="space-y-4">
-                            <button onclick="clearSystemData('students')" class="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 border border-orange-300 py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center">
-                                <span>1. ล้างเฉพาะข้อมูล <b>"นักเรียน"</b></span>
-                                <span class="text-xs">ลบรายชื่อ & การลงทะเบียน</span>
-                            </button>
-                            <button onclick="clearSystemData('subjects')" class="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 border border-orange-300 py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center">
-                                <span>2. ล้างเฉพาะข้อมูล <b>"วิชา"</b></span>
-                                <span class="text-xs">ลบรายวิชา & รีเซ็ตการลงทะเบียนนักเรียน</span>
-                            </button>
-                            <button onclick="clearSystemData('staff')" class="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 border border-orange-300 py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center">
-                                <span>3. ล้างเฉพาะข้อมูล <b>"ครู/บุคลากร"</b></span>
-                                <span class="text-xs">ยกเว้น Admin หลัก</span>
-                            </button>
-                            <button onclick="clearSystemData('all')" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md font-medium transition text-left px-4 flex justify-between items-center shadow-sm">
-                                <span>4. ล้างข้อมูล <b>"ทั้งหมดในระบบ"</b></span>
-                                <span class="text-xs">รีเซ็ตทุกอย่าง (วิชา, นักเรียน, ครู)</span>
-                            </button>
+                    <div class="mt-16 pt-8 border-t border-red-100">
+                        <h4 class="text-red-600 font-bold mb-4 flex items-center">
+                            <span class="mr-2">⚠️</span> Danger Zone (ล้างข้อมูลระบบ)
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="clearSystemData('students')" class="bg-red-50 text-red-600 border border-red-200 py-2 rounded text-xs hover:bg-red-100 transition">ลบเฉพาะรายชื่อนักเรียน</button>
+                            <button onclick="clearSystemData('subjects')" class="bg-red-50 text-red-600 border border-red-200 py-2 rounded text-xs hover:bg-red-100 transition">ลบเฉพาะรายวิชา</button>
+                            <button onclick="clearSystemData('all')" class="sm:col-span-2 bg-red-600 text-white py-3 rounded text-sm font-bold shadow-sm hover:bg-red-700 transition">ล้างข้อมูล "ทั้งหมด" (รีเซ็ตระบบใหม่)</button>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <!-- Footer Credit -->
-    <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-sm text-gray-500">
-                พัฒนาโดย <b>ศูนย์สื่อ นวัตกรรม และเทคโนโลยีการศึกษา</b><br>
-                โรงเรียนศรีสวัสดิ์วิทยาคารจังหวัดน่าน
+    <footer class="bg-white border-t border-gray-100 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-gray-400 font-medium tracking-wide">
+                พัฒนาโดย <span class="text-blue-500">ศูนย์สื่อ นวัตกรรม และเทคโนโลยีการศึกษา</span>
             </p>
+            <p class="text-[10px] text-gray-300 uppercase mt-1">โรงเรียนศรีสวัสดิ์วิทยาคารจังหวัดน่าน</p>
         </div>
     </footer>
 
-    <!-- Firebase & Logic Script -->
+    <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, runTransaction, onSnapshot, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
-        const defaultFirebaseConfig = {
-            apiKey: "AIzaSyCWs76PtSpBDz8a9keyWqoIenYhPVoBITw",
-            authDomain: "olympic-d9b49.firebaseapp.com",
-            projectId: "olympic-d9b49",
-            storageBucket: "olympic-d9b49.firebasestorage.app",
-            messagingSenderId: "476920174627",
-            appId: "1:476920174627:web:fc127e313e9923b1f77996"
+        // Global Configurations
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "", authDomain: "olympic-d9b49.firebaseapp.com", projectId: "olympic-d9b49", storageBucket: "olympic-d9b49.firebasestorage.app", messagingSenderId: "476920174627", appId: "1:476920174627:web:fc127e313e9923b1f77996"
         };
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'elective-app-default';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'sw-olympic-regis';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
+        
+        // Firestore Path Helper (Rule 1)
         const getPath = (col) => `artifacts/${appId}/public/data/${col}`;
 
         // Global State
-        let currentUser = null; 
+        let currentUser = null;
         let subjectsList = [];
         let studentsList = [];
         let staffList = [];
         let systemSettings = { isOpen: false, startTime: null, endTime: null };
-        let unsubSubjects, unsubStudents, unsubStaff, unsubSettings;
         let timerInterval = null;
 
-        const elOverlay = document.getElementById('loading-overlay');
-        const elUserMenu = document.getElementById('user-menu');
-        const elNavUsername = document.getElementById('nav-username');
-        
-        // Helper string format for UI
-        const formatAllowed = (val, type) => {
-            if (!val || val === 'all' || val === '') return `รับทุก${type}`;
-            return `${type} ${val}`;
-        };
+        // --- Core Functions ---
 
-        function showScreen(screenId) {
-            ['screen-login', 'screen-student', 'screen-teacher', 'screen-admin', 'screen-receipt'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
-            });
-            document.getElementById(screenId).classList.remove('hidden');
-            
-            if (screenId === 'screen-login') {
-                elUserMenu.classList.add('hidden');
-                document.getElementById('form-student-login').reset();
-                document.getElementById('form-staff-login').reset();
-            } else {
-                elUserMenu.classList.remove('hidden');
-            }
-        }
-
-        // --- Initialization & Auth ---
         async function initApp() {
             try {
+                // Auth Rule 3
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-                
+
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        await bootstrapAdmin();
+                        // Bootstrap Admin Account if not exists
+                        const adminRef = doc(db, getPath('staff'), 'admin');
+                        const adminSnap = await getDoc(adminRef);
+                        if (!adminSnap.exists()) {
+                            await setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin', name: 'ผู้ดูแลระบบหลัก' });
+                        }
+
                         listenToSettings();
-                        elOverlay.classList.add('hidden');
+                        document.getElementById('loading-overlay').classList.add('hidden');
                         showScreen('screen-login');
                     }
                 });
-            } catch (error) {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อระบบฐานข้อมูลได้', 'error');
-            }
-        }
-
-        async function bootstrapAdmin() {
-            const adminRef = doc(db, getPath('staff'), 'admin');
-            const docSnap = await getDoc(adminRef);
-            if (!docSnap.exists()) {
-                await setDoc(adminRef, { username: 'admin', password: 'admin123', role: 'admin', name: 'ผู้ดูแลระบบหลัก' });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'error');
             }
         }
 
         function listenToSettings() {
-            const ref = doc(db, getPath('settings'), 'system');
-            unsubSettings = onSnapshot(ref, (snap) => {
+            onSnapshot(doc(db, getPath('settings'), 'system'), (snap) => {
                 if (snap.exists()) {
                     systemSettings = snap.data();
                 } else {
-                    systemSettings = { isOpen: false, startTime: Date.now(), endTime: Date.now() + 86400000 };
-                    setDoc(ref, systemSettings);
+                    // Init default settings
+                    const def = { isOpen: false, startTime: Date.now(), endTime: Date.now() + 86400000 };
+                    setDoc(doc(db, getPath('settings'), 'system'), def);
+                    systemSettings = def;
                 }
-                updateCatTimer(); 
-                if(currentUser && currentUser.role === 'student') renderStudentSubjects(); 
+                updateSystemStatusUI();
+                updateCatTimer();
             });
         }
 
-        // --- Login Logic ---
-        document.getElementById('tab-student').addEventListener('click', (e) => {
-            e.target.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-            e.target.classList.remove('text-gray-500');
+        function updateSystemStatusUI() {
+            const infoBox = document.getElementById('status-time-info');
+            const now = Date.now();
+            const start = systemSettings.startTime || 0;
+            const end = systemSettings.endTime || 0;
+            
+            let statusBadge = "";
+            let timeStr = "";
+
+            if (!systemSettings.isOpen) {
+                statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">● ปิดระบบ</span>`;
+            } else if (now < start) {
+                statusBadge = `<span class="bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded font-bold">● รอดำเนินการ</span>`;
+            } else if (now > end) {
+                statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">● หมดเขต</span>`;
+            } else {
+                statusBadge = `<span class="bg-green-100 text-green-600 px-2 py-0.5 rounded font-bold">● กำลังเปิดรับ</span>`;
+            }
+
+            timeStr = `
+                <div class="flex flex-col space-y-1">
+                    <div class="flex justify-between"><span>สถานะปัจจุบัน:</span> ${statusBadge}</div>
+                    <div class="flex justify-between"><span>เริ่ม:</span> <b>${new Date(start).toLocaleString('th-TH')}</b></div>
+                    <div class="flex justify-between"><span>สิ้นสุด:</span> <b>${new Date(end).toLocaleString('th-TH')}</b></div>
+                </div>
+            `;
+            infoBox.innerHTML = timeStr;
+
+            // Admin Page Elements
+            const btn = document.getElementById('toggle-system-status');
+            if (btn) {
+                btn.innerText = systemSettings.isOpen ? "ระบบเปิดอยู่" : "ระบบปิดอยู่";
+                btn.className = systemSettings.isOpen ? "px-6 py-2 rounded-full font-bold bg-green-500 text-white shadow-sm" : "px-6 py-2 rounded-full font-bold bg-gray-300 text-gray-700 shadow-sm";
+            }
+        }
+
+        function showScreen(id) {
+            ['screen-login', 'screen-student', 'screen-teacher', 'screen-admin', 'screen-receipt'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            
+            const navMenu = document.getElementById('user-menu');
+            if (id === 'screen-login') navMenu.classList.add('hidden');
+            else navMenu.classList.remove('hidden');
+        }
+
+        // --- Login logic ---
+
+        document.getElementById('tab-student').onclick = () => {
+            document.getElementById('tab-student').classList.add('tab-active');
+            document.getElementById('tab-staff').classList.remove('tab-active');
             document.getElementById('tab-staff').classList.add('text-gray-500');
-            document.getElementById('tab-staff').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
             document.getElementById('form-student-login').classList.remove('hidden');
             document.getElementById('form-staff-login').classList.add('hidden');
-        });
+        };
 
-        document.getElementById('tab-staff').addEventListener('click', (e) => {
-            e.target.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
-            e.target.classList.remove('text-gray-500');
+        document.getElementById('tab-staff').onclick = () => {
+            document.getElementById('tab-staff').classList.add('tab-active');
+            document.getElementById('tab-student').classList.remove('tab-active');
             document.getElementById('tab-student').classList.add('text-gray-500');
-            document.getElementById('tab-student').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
             document.getElementById('form-staff-login').classList.remove('hidden');
             document.getElementById('form-student-login').classList.add('hidden');
-        });
+        };
 
-        document.getElementById('form-student-login').addEventListener('submit', async (e) => {
+        document.getElementById('form-student-login').onsubmit = async (e) => {
             e.preventDefault();
             const sid = document.getElementById('login-student-id').value.trim();
             const pass = document.getElementById('login-student-pass').value.trim();
 
             if (sid !== pass) {
-                return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาใช้เลขประจำตัวนักเรียนกรอกทั้งสองช่อง', 'warning');
+                return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณาใช้รหัสประจำตัวนักเรียนกรอกทั้งสองช่อง', 'warning');
             }
 
             Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                const docRef = doc(db, getPath('students'), sid);
-                const docSnap = await getDoc(docRef);
-
+                const docSnap = await getDoc(doc(db, getPath('students'), sid));
                 if (docSnap.exists()) {
-                    currentUser = { role: 'student', data: docSnap.data(), id: sid };
-                    elNavUsername.innerText = `นักเรียน: ${currentUser.data.name}`;
+                    currentUser = { role: 'student', id: sid, data: docSnap.data() };
+                    document.getElementById('nav-username').innerText = `นักเรียน: ${currentUser.data.name}`;
                     Swal.close();
                     initStudentDashboard();
                 } else {
-                    Swal.fire('เข้าสู่ระบบล้มเหลว', 'ไม่พบรหัสนักเรียนในระบบ', 'error');
+                    Swal.fire('ไม่พบข้อมูล', 'ไม่พบรหัสประจำตัวนักเรียนนี้ในฐานข้อมูล', 'error');
                 }
-            } catch (err) {
-                Swal.fire('Error', err.message, 'error');
-            }
-        });
+            } catch (err) { Swal.fire('Error', err.message, 'error'); }
+        };
 
-        document.getElementById('form-staff-login').addEventListener('submit', async (e) => {
+        document.getElementById('form-staff-login').onsubmit = async (e) => {
             e.preventDefault();
-            const user = document.getElementById('login-staff-user').value.trim();
-            const pass = document.getElementById('login-staff-pass').value.trim();
+            const u = document.getElementById('login-staff-user').value.trim();
+            const p = document.getElementById('login-staff-pass').value.trim();
 
             Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                const staffSnap = await getDocs(collection(db, getPath('staff')));
-                let foundStaff = null;
-                staffSnap.forEach(doc => {
-                    const data = doc.data();
-                    if (data.username === user && data.password === pass) {
-                        foundStaff = { id: doc.id, ...data };
+                const staffSnaps = await getDocs(collection(db, getPath('staff')));
+                let found = null;
+                staffSnaps.forEach(d => {
+                    const data = d.data();
+                    if (data.username === u && data.password === p) {
+                        found = { id: d.id, ...data };
                     }
                 });
 
-                if (!foundStaff && user === 'admin' && pass === 'admin123') {
-                    foundStaff = { id: 'admin', username: 'admin', role: 'admin', name: 'แอดมิน (ฉุกเฉิน)' };
-                }
-
-                if (foundStaff) {
-                    currentUser = { role: foundStaff.role, data: foundStaff, id: foundStaff.id };
-                    elNavUsername.innerText = `${foundStaff.role === 'admin' ? 'แอดมิน' : 'ครู'}: ${foundStaff.name}`;
+                if (found) {
+                    currentUser = { role: found.role, id: found.id, data: found };
+                    document.getElementById('nav-username').innerText = `${found.role === 'admin' ? 'แอดมิน' : 'ครู'}: ${found.name}`;
                     Swal.close();
-                    
-                    if (foundStaff.role === 'admin') initAdminDashboard();
-                    else if (foundStaff.role === 'teacher') initTeacherDashboard();
+                    if (found.role === 'admin') initAdminDashboard();
+                    else initTeacherDashboard();
                 } else {
-                    Swal.fire('ล้มเหลว', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
+                    Swal.fire('เข้าสู่ระบบล้มเหลว', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'error');
                 }
-            } catch (err) {
-                Swal.fire('Error', err.message, 'error');
-            }
-        });
+            } catch (err) { Swal.fire('Error', err.message, 'error'); }
+        };
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            currentUser = null;
-            if (unsubSubjects) unsubSubjects();
-            if (unsubStudents) unsubStudents();
-            if (unsubStaff) unsubStaff();
-            if (timerInterval) clearInterval(timerInterval);
-            showScreen('screen-login');
-        });
-
-        // --- Core Listeners ---
-        function attachGlobalDataListeners(callback) {
-            unsubSubjects = onSnapshot(collection(db, getPath('subjects')), (snap) => {
-                subjectsList = [];
-                snap.forEach(doc => subjectsList.push({ id: doc.id, ...doc.data() }));
-                if(callback) callback('subjects');
-            });
-
-            unsubStudents = onSnapshot(collection(db, getPath('students')), (snap) => {
-                studentsList = [];
-                snap.forEach(doc => studentsList.push({ id: doc.id, ...doc.data() }));
-                
-                if(currentUser && currentUser.role === 'student') {
-                    const myData = studentsList.find(s => s.id === currentUser.id);
-                    if(myData) currentUser.data = myData;
-                }
-                if(callback) callback('students');
-            });
-        }
-
-        function updateCatTimer() {
-            if (currentUser && currentUser.role === 'student') {
-                document.getElementById('timer-container').classList.remove('hidden');
-                if (timerInterval) clearInterval(timerInterval);
-                
-                const runner = document.getElementById('cat-icon');
-                const progress = document.getElementById('cat-progress');
-                const text = document.getElementById('timer-text');
-
-                const tick = () => {
-                    const now = Date.now();
-                    const end = systemSettings.endTime ? parseInt(systemSettings.endTime) : now;
-                    const start = systemSettings.startTime ? parseInt(systemSettings.startTime) : (end - 86400000);
-                    
-                    if (!systemSettings.isOpen) {
-                        text.innerText = "ระบบปิดการลงทะเบียน";
-                        text.className = "text-sm font-bold text-red-600";
-                        runner.style.left = '100%';
-                        progress.style.width = '100%';
-                        progress.className = "absolute top-0 left-0 h-full bg-red-200 transition-all duration-1000";
-                        return;
-                    }
-
-                    if (now >= end) {
-                        text.innerText = "หมดเวลาการลงทะเบียน";
-                        text.className = "text-sm font-bold text-red-600";
-                        runner.style.left = '100%';
-                        progress.style.width = '100%';
-                        progress.className = "absolute top-0 left-0 h-full bg-red-200 transition-all duration-1000";
-                    } else {
-                        const total = end - start;
-                        let passed = now - start;
-                        if (passed < 0) passed = 0;
-                        let pct = (passed / total) * 100;
-                        if(pct > 95) pct = 95; 
-                        
-                        const remain = end - now;
-                        const hrs = Math.floor(remain / 3600000);
-                        const mins = Math.floor((remain % 3600000) / 60000);
-                        
-                        text.innerText = `เหลือเวลา ${hrs} ชม. ${mins} นาที`;
-                        text.className = "text-sm font-bold text-blue-600";
-                        runner.style.left = `${pct}%`;
-                        progress.style.width = `${pct}%`;
-                        progress.className = "absolute top-0 left-0 h-full bg-green-200 transition-all duration-1000";
-                    }
-                };
-                
-                tick();
-                timerInterval = setInterval(tick, 60000); 
-            }
-        }
+        document.getElementById('btn-logout').onclick = () => location.reload();
 
         // --- Student Dashboard ---
+
         function initStudentDashboard() {
             showScreen('screen-student');
-            attachGlobalDataListeners((type) => {
-                renderStudentStatus();
+            
+            // Listen for changes
+            onSnapshot(collection(db, getPath('subjects')), (snap) => {
+                subjectsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderStudentSubjects();
             });
+
+            onSnapshot(doc(db, getPath('students'), currentUser.id), (snap) => {
+                if(snap.exists()){
+                    currentUser.data = snap.data();
+                    renderStudentStatus();
+                    document.getElementById('student-info-tag').innerText = `ม.${currentUser.data.grade}/${currentUser.data.room} | เลขที่ ${currentUser.data.no || '-'}`;
+                }
+            });
+
             updateCatTimer();
         }
 
         function renderStudentStatus() {
-            const alertBox = document.getElementById('student-status-alert');
+            const box = document.getElementById('student-status-alert');
             const data = currentUser.data;
 
             if (data.status === 'registered' && data.registered_subject_id) {
                 const sub = subjectsList.find(s => s.id === data.registered_subject_id);
-                const subName = sub ? sub.subject_name : data.registered_subject_id;
+                const subName = sub ? sub.subject_name : 'ไม่ระบุ';
                 
-                alertBox.className = 'mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex justify-between items-center';
-                alertBox.innerHTML = `
-                    <div>
-                        <h4 class="text-green-800 font-bold text-lg flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            ลงทะเบียนเรียบร้อยแล้ว
-                        </h4>
-                        <p class="text-green-700 mt-1">วิชาที่ได้: <b>${subName}</b></p>
+                box.innerHTML = `
+                    <div class="p-5 bg-green-50 border border-green-200 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center">
+                            <div class="bg-green-500 text-white rounded-full p-2 mr-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-green-800 text-lg">ลงทะเบียนเรียบร้อยแล้ว</h4>
+                                <p class="text-green-600 text-sm">วิชาที่คุณเลือกคือ: <b>${subName}</b></p>
+                            </div>
+                        </div>
+                        <button onclick="window.showReceipt()" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-lg shadow-sm font-bold transition">ดูหลักฐานการลงทะเบียน</button>
                     </div>
-                    <button onclick="showReceipt()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow text-sm">ดูข้อมูล</button>
                 `;
-                alertBox.classList.remove('hidden');
+                box.classList.remove('hidden');
             } else {
-                alertBox.classList.add('hidden');
+                box.classList.add('hidden');
             }
-            renderStudentSubjects();
         }
 
         function renderStudentSubjects() {
             const grid = document.getElementById('subject-grid');
             grid.innerHTML = '';
             
-            const isRegistered = currentUser.data.status === 'registered';
-            const sysOpen = systemSettings.isOpen;
-
-            const stuGrade = String(currentUser.data.grade || '').trim();
-            const stuRoom = String(currentUser.data.room || '').trim();
-
-            const eligibleSubjects = subjectsList.filter(sub => {
-                const grades = String(sub.allowed_grades || 'all').split(',').map(s => s.trim());
-                const rooms = String(sub.allowed_rooms || 'all').split(',').map(s => s.trim());
-                const gradeMatch = grades.includes('all') || grades.includes('') || grades.includes(stuGrade);
-                const roomMatch = rooms.includes('all') || rooms.includes('') || rooms.includes(stuRoom);
-                return gradeMatch && roomMatch;
-            });
-
-            const sorted = [...eligibleSubjects].sort((a,b) => b.remaining_slots - a.remaining_slots);
-
-            sorted.forEach(sub => {
+            const now = Date.now();
+            const isOpenTime = systemSettings.isOpen && now >= (systemSettings.startTime || 0) && now <= (systemSettings.endTime || 0);
+            
+            subjectsList.sort((a,b) => b.remaining_slots - a.remaining_slots).forEach(sub => {
                 const isFull = sub.remaining_slots <= 0;
-                const isMySubject = currentUser.data.registered_subject_id === sub.id;
+                const isMine = currentUser.data.registered_subject_id === sub.id;
                 
-                let btnHtml = '';
-                if (!sysOpen) {
-                    btnHtml = `<button disabled class="w-full mt-4 bg-gray-200 text-gray-500 font-bold py-2 rounded cursor-not-allowed">ระบบปิด</button>`;
-                } else if (isMySubject) {
-                    btnHtml = `<button disabled class="w-full mt-4 bg-green-100 text-green-800 font-bold py-2 rounded border border-green-300 cursor-not-allowed">วิชาของคุณ</button>`;
-                } else if (isRegistered) {
-                    if (isFull) {
-                        btnHtml = `<button disabled class="w-full mt-4 bg-red-100 text-red-600 font-bold py-2 rounded cursor-not-allowed">ที่นั่งเต็ม</button>`;
-                    } else {
-                        btnHtml = `<button onclick="handleRegister('${sub.id}')" class="w-full mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 rounded transition shadow-sm">เปลี่ยนเป็นวิชานี้</button>`;
-                    }
+                let btnAttr = "";
+                let btnClass = "w-full py-3 rounded-xl font-bold transition shadow-sm";
+                let btnText = "ลงทะเบียนวิชานี้";
+
+                if (!isOpenTime) {
+                    btnAttr = "disabled";
+                    btnClass += " bg-gray-100 text-gray-400 cursor-not-allowed";
+                    btnText = now < systemSettings.startTime ? "ระบบยังไม่เปิด" : "ปิดระบบรับสมัครแล้ว";
+                } else if (isMine) {
+                    btnAttr = "disabled";
+                    btnClass += " bg-green-100 text-green-700 border-2 border-green-500 cursor-not-allowed";
+                    btnText = "วิชาที่คุณเลือกอยู่";
                 } else if (isFull) {
-                    btnHtml = `<button disabled class="w-full mt-4 bg-red-100 text-red-600 font-bold py-2 rounded cursor-not-allowed">ที่นั่งเต็ม</button>`;
+                    btnAttr = "disabled";
+                    btnClass += " bg-red-50 text-red-400 cursor-not-allowed";
+                    btnText = "ที่นั่งเต็มแล้ว";
                 } else {
-                    btnHtml = `<button onclick="handleRegister('${sub.id}')" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded transition shadow-sm">ลงทะเบียน</button>`;
+                    btnClass += " bg-blue-600 hover:bg-blue-700 text-white";
                 }
 
-                const percent = (sub.remaining_slots / sub.total_slots) * 100;
-                let barColor = 'bg-green-500';
-                if (percent < 30) barColor = 'bg-yellow-500';
-                if (percent <= 0) barColor = 'bg-red-500';
-
-                const card = `
-                    <div class="bg-white rounded-xl shadow-sm border ${isMySubject?'border-green-400 border-2':'border-gray-200'} p-6 flex flex-col justify-between hover:shadow-md transition">
+                grid.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white rounded-2xl p-6 border ${isMine ? 'border-green-400 shadow-md':'border-gray-100 shadow-sm'} flex flex-col justify-between hover:shadow-lg transition">
                         <div>
-                            <div class="flex justify-between items-start">
-                                <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-mono">${sub.id}</span>
-                                ${isFull ? `<span class="bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-bold">เต็ม</span>` : `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded font-medium">ว่าง ${sub.remaining_slots}</span>`}
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">${sub.id}</span>
+                                ${isFull ? '<span class="text-red-500 text-xs font-bold">เต็ม</span>':'<span class="text-green-500 text-xs font-bold">ว่าง</span>'}
                             </div>
-                            <h3 class="mt-3 text-lg font-bold text-gray-800">${sub.subject_name}</h3>
-                            <p class="text-sm text-gray-500 mt-1">👩‍🏫 ผู้สอน: ${sub.teacher}</p>
-                            <p class="text-sm text-gray-500 mt-1">📍 สถานที่: ${sub.location || '-'}</p>
-                            <p class="text-xs text-blue-500 mt-2">เงื่อนไข: ${formatAllowed(sub.allowed_grades, 'ชั้น')} | ${formatAllowed(sub.allowed_rooms, 'ห้อง')}</p>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2 leading-tight">${sub.subject_name}</h3>
+                            <div class="space-y-1.5 mb-6 text-sm text-gray-500 font-medium">
+                                <p class="flex items-center"><span class="mr-2">👩‍🏫</span> ผู้สอน: ${sub.teacher}</p>
+                                <p class="flex items-center"><span class="mr-2">📍</span> สถานที่: ${sub.location || '-'}</p>
+                            </div>
                         </div>
-                        
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-500">จำนวนรับ</span>
-                                <span class="font-medium">${sub.total_slots - sub.remaining_slots} / ${sub.total_slots}</span>
+                        <div class="mt-auto">
+                            <div class="flex justify-between text-xs mb-2">
+                                <span class="text-gray-400 uppercase tracking-tighter font-bold">ที่นั่งว่างคงเหลือ</span>
+                                <span class="text-gray-700 font-bold">${sub.remaining_slots} / ${sub.total_slots}</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="${barColor} h-2 rounded-full" style="width: ${100 - percent}%"></div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden mb-5">
+                                <div class="${isFull ? 'bg-red-500':'bg-blue-500'} h-full transition-all duration-500" style="width: ${(sub.remaining_slots/sub.total_slots)*100}%"></div>
                             </div>
-                            ${btnHtml}
+                            <button ${btnAttr} onclick="handleRegister('${sub.id}')" class="${btnClass}">${btnText}</button>
                         </div>
                     </div>
-                `;
-                grid.insertAdjacentHTML('beforeend', card);
+                `);
             });
         }
 
-        window.handleRegister = async (newSubjectId) => {
-            if (!systemSettings.isOpen) return Swal.fire('ปิดระบบ', 'ระบบปิดการลงทะเบียนแล้ว', 'warning');
-
-            const isChange = currentUser.data.status === 'registered';
-            const oldSubjectId = currentUser.data.registered_subject_id;
-            const subInfo = subjectsList.find(s => s.id === newSubjectId);
-            const oldSubInfo = subjectsList.find(s => s.id === oldSubjectId);
-            
-            let htmlMsg = `คุณต้องการลงทะเบียนวิชา <b>${subInfo.subject_name}</b> ใช่หรือไม่?`;
-            if (isChange) {
-                htmlMsg = `คุณกำลังเปลี่ยนจากวิชา<br><b class="text-red-600">${oldSubInfo?.subject_name}</b><br>ไปเป็นวิชา<br><b class="text-green-600">${subInfo.subject_name}</b> ใช่หรือไม่?`;
-            }
-
-            const result = await Swal.fire({
-                title: isChange ? 'ยืนยันการเปลี่ยนวิชา' : 'ยืนยันการลงทะเบียน',
-                html: htmlMsg,
+        window.handleRegister = async (subId) => {
+            const res = await Swal.fire({
+                title: 'ยืนยันการลงทะเบียน?',
+                text: 'คุณสามารถเปลี่ยนวิชาได้ภายหลังหากยังมีที่ว่าง',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3b82f6',
-                cancelButtonColor: '#d1d5db',
-                confirmButtonText: 'ยืนยัน',
+                confirmButtonText: 'ยืนยันเลือกวิชานี้',
                 cancelButtonText: 'ยกเลิก'
             });
 
-            if (result.isConfirmed) {
+            if (res.isConfirmed) {
                 Swal.fire({ title: 'กำลังประมวลผล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
-                const newSubjectRef = doc(db, getPath('subjects'), newSubjectId);
-                const studentRef = doc(db, getPath('students'), currentUser.id);
-
                 try {
                     await runTransaction(db, async (transaction) => {
-                        const setSnap = await transaction.get(doc(db, getPath('settings'), 'system'));
-                        if(!setSnap.exists() || !setSnap.data().isOpen) throw new Error("ระบบปิดการลงทะเบียนแล้ว");
-
-                        const newSubjectDoc = await transaction.get(newSubjectRef);
-                        const studentDoc = await transaction.get(studentRef);
-
-                        if (!newSubjectDoc.exists()) throw new Error("ไม่พบข้อมูลวิชาใหม่");
-                        if (!studentDoc.exists()) throw new Error("ไม่พบข้อมูลนักเรียน");
-
-                        const subject = newSubjectDoc.data();
-                        const student = studentDoc.data();
-
-                        if (subject.remaining_slots <= 0) throw new Error("ที่นั่งวิชาใหม่เต็มแล้ว");
-
-                        const grades = String(subject.allowed_grades || 'all').split(',').map(s => s.trim());
-                        const rooms = String(subject.allowed_rooms || 'all').split(',').map(s => s.trim());
-                        if (!grades.includes('all') && !grades.includes('') && !grades.includes(String(student.grade))) {
-                            throw new Error("ชั้นเรียนไม่ตรงเงื่อนไข");
-                        }
-                        if (!rooms.includes('all') && !rooms.includes('') && !rooms.includes(String(student.room))) {
-                            throw new Error("ห้องเรียนไม่ตรงเงื่อนไข");
+                        const now = Date.now();
+                        const sRef = doc(db, getPath('settings'), 'system');
+                        const settingsDoc = await transaction.get(sRef);
+                        const settings = settingsDoc.data();
+                        
+                        if (!settings.isOpen || now < settings.startTime || now > settings.endTime) {
+                            throw new Error("ระบบไม่ได้อยู่ในช่วงเวลาที่เปิดรับลงทะเบียน");
                         }
 
-                        if (student.status === 'registered' && student.registered_subject_id) {
-                            if (student.registered_subject_id === newSubjectId) throw new Error("ลงทะเบียนวิชานี้อยู่แล้ว");
-                            
-                            const oldRef = doc(db, getPath('subjects'), student.registered_subject_id);
-                            const oldDoc = await transaction.get(oldRef);
-                            if (oldDoc.exists()) {
-                                transaction.update(oldRef, { remaining_slots: oldDoc.data().remaining_slots + 1 });
-                            }
+                        const subRef = doc(db, getPath('subjects'), subId);
+                        const subDoc = await transaction.get(subRef);
+                        const stuRef = doc(db, getPath('students'), currentUser.id);
+                        const stuDoc = await transaction.get(stuRef);
+
+                        if (subDoc.data().remaining_slots <= 0) throw new Error("ที่นั่งวิชานี้เต็มไปก่อนแล้ว");
+
+                        // If changing subject, return slot to old one
+                        const oldSubId = stuDoc.data().registered_subject_id;
+                        if (oldSubId) {
+                            const oldSubRef = doc(db, getPath('subjects'), oldSubId);
+                            const oldSubDoc = await transaction.get(oldSubRef);
+                            transaction.update(oldSubRef, { remaining_slots: oldSubDoc.data().remaining_slots + 1 });
                         }
 
-                        transaction.update(newSubjectRef, { remaining_slots: subject.remaining_slots - 1 });
-                        transaction.update(studentRef, { 
-                            registered_subject_id: newSubjectId, 
+                        // Update New Subject
+                        transaction.update(subRef, { remaining_slots: subDoc.data().remaining_slots - 1 });
+                        // Update Student
+                        transaction.update(stuRef, {
                             status: 'registered',
-                            timestamp: new Date().getTime()
+                            registered_subject_id: subId,
+                            timestamp: now
                         });
                     });
 
-                    Swal.fire('สำเร็จ!', isChange ? 'เปลี่ยนวิชาเรียบร้อยแล้ว' : 'ลงทะเบียนเรียบร้อยแล้ว', 'success').then(() => {
-                        showReceipt();
+                    Swal.fire('สำเร็จ!', 'ลงทะเบียนรายวิชาเรียบร้อยแล้ว', 'success').then(() => {
+                        window.showReceipt();
                     });
-
                 } catch (err) {
-                    Swal.fire('เกิดข้อผิดพลาด', err.message, 'warning');
+                    Swal.fire('ล้มเหลว', err.message, 'error');
                 }
             }
         };
@@ -922,244 +819,220 @@
         window.showReceipt = () => {
             const data = currentUser.data;
             const sub = subjectsList.find(s => s.id === data.registered_subject_id);
-            if (!sub) return;
+            if(!sub) return;
 
             document.getElementById('receipt-student-id').innerText = currentUser.id;
             document.getElementById('receipt-student-name').innerText = data.name;
-            document.getElementById('receipt-student-class').innerText = `ม.${data.grade || '-'}/${data.room || '-'}`;
+            document.getElementById('receipt-student-class').innerText = `ม.${data.grade}/${data.room} เลขที่ ${data.no || '-'}`;
             document.getElementById('receipt-subject-name').innerText = sub.subject_name;
             document.getElementById('receipt-location').innerText = sub.location || '-';
-            document.getElementById('receipt-teacher').innerText = sub.teacher;
+            document.getElementById('receipt-timestamp').innerText = new Date(data.timestamp).toLocaleString('th-TH');
+            document.getElementById('receipt-verify-code').innerText = `REG-${appId}-${currentUser.id}-${data.timestamp}`;
             
-            const dateStr = new Date(data.timestamp || Date.now()).toLocaleString('th-TH');
-            document.getElementById('receipt-timestamp').innerText = dateStr;
-
             showScreen('screen-receipt');
         };
 
-        document.getElementById('btn-back-dashboard').addEventListener('click', () => {
-            showScreen('screen-student');
-        });
+        document.getElementById('btn-download-pdf').onclick = () => {
+            const el = document.getElementById('receipt-card');
+            html2canvas(el, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Receipt_${currentUser.id}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        };
+
+        document.getElementById('btn-back-dashboard').onclick = () => showScreen('screen-student');
+
+        function updateCatTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            const runner = document.getElementById('cat-icon');
+            const progress = document.getElementById('cat-progress');
+            const text = document.getElementById('timer-text');
+            if (!runner) return;
+
+            const tick = () => {
+                const now = Date.now();
+                const start = systemSettings.startTime || now;
+                const end = systemSettings.endTime || now;
+
+                if (!systemSettings.isOpen || now > end) {
+                    text.innerText = "ระบบปิดรับลงทะเบียนแล้ว";
+                    runner.style.left = "100%";
+                    progress.style.width = "100%";
+                    return;
+                }
+
+                if (now < start) {
+                    text.innerText = "ยังไม่ถึงเวลาเปิดรับสมัคร";
+                    runner.style.left = "0%";
+                    progress.style.width = "0%";
+                    return;
+                }
+
+                const total = end - start;
+                const passed = now - start;
+                const pct = Math.min(100, (passed / total) * 100);
+                runner.style.left = `${pct}%`;
+                progress.style.width = `${pct}%`;
+
+                const rem = end - now;
+                const hours = Math.floor(rem / 3600000);
+                const mins = Math.floor((rem % 3600000) / 60000);
+                text.innerText = `เหลือเวลา ${hours} ชม. ${mins} นาที`;
+            };
+
+            tick();
+            timerInterval = setInterval(tick, 60000);
+            document.getElementById('timer-container').classList.remove('hidden');
+        }
 
         // --- Teacher Dashboard ---
+
         function initTeacherDashboard() {
             showScreen('screen-teacher');
-            attachGlobalDataListeners(() => { setupTeacherFilters(); });
+            onSnapshot(collection(db, getPath('subjects')), (snap) => {
+                subjectsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                setupTeacherFilters();
+            });
+            onSnapshot(collection(db, getPath('students')), (snap) => {
+                studentsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderTeacherList();
+            });
         }
-
-        let currentTeacherSubjects = []; // Holds subjects the teacher can see
-        let selectedTeacherSubject = null;
 
         function setupTeacherFilters() {
-            const teacherSubId = String(currentUser.data.subject_id || '').trim();
-            const subjectIds = teacherSubId.split(',').map(s=>s.trim()).filter(s=>s);
+            const assignedIds = (currentUser.data.subject_id || "").split(',').map(s => s.trim()).filter(s => s);
+            const mySubjects = subjectsList.filter(s => assignedIds.length === 0 || assignedIds.includes(s.id));
             
-            currentTeacherSubjects = subjectsList.filter(s => subjectIds.includes(s.id) || !teacherSubId);
+            const gradeSet = new Set();
+            mySubjects.forEach(s => {
+                (s.allowed_grades || "all").split(',').forEach(g => { if(g.trim()) gradeSet.add(g.trim()); });
+            });
 
-            // Extract unique grades from these subjects
-            let allGrades = new Set();
-            currentTeacherSubjects.forEach(sub => {
-                const grades = String(sub.allowed_grades || 'all').split(',').map(s=>s.trim());
-                grades.forEach(g => {
-                    if (g && g !== 'all') allGrades.add(g);
+            const gs = document.getElementById('teacher-filter-grade');
+            const oldG = gs.value;
+            gs.innerHTML = '<option value="">-- เลือกระดับชั้น --</option><option value="all">ทุกระดับชั้น (All)</option>';
+            Array.from(gradeSet).sort().forEach(g => {
+                if(g !== 'all') gs.innerHTML += `<option value="${g}">ม.${g}</option>`;
+            });
+            if(oldG) gs.value = oldG;
+
+            gs.onchange = () => {
+                const ss = document.getElementById('teacher-filter-subject');
+                const gVal = gs.value;
+                ss.innerHTML = '<option value="">-- เลือกวิชา --</option>';
+                if (!gVal) { ss.disabled = true; return; }
+                ss.disabled = false;
+                mySubjects.filter(s => gVal === 'all' || (s.allowed_grades || "all").includes(gVal) || s.allowed_grades === 'all').forEach(s => {
+                    ss.innerHTML += `<option value="${s.id}">${s.id} - ${s.subject_name}</option>`;
                 });
-            });
-
-            const gradeSelect = document.getElementById('teacher-filter-grade');
-            const currentGradeVal = gradeSelect.value; // preserve selection
-            gradeSelect.innerHTML = `<option value="">-- เลือกระดับชั้น --</option>
-                                     <option value="all">ทุกระดับชั้น (All)</option>`;
+            };
             
-            [...allGrades].sort((a,b)=>a-b).forEach(g => {
-                gradeSelect.innerHTML += `<option value="${g}">ม.${g}</option>`;
-            });
-            if(currentGradeVal) gradeSelect.value = currentGradeVal;
-
-            // Trigger change logic once to setup initial state
-            handleTeacherGradeChange();
+            document.getElementById('teacher-filter-subject').onchange = renderTeacherList;
         }
 
-        document.getElementById('teacher-filter-grade').addEventListener('change', handleTeacherGradeChange);
-        document.getElementById('teacher-filter-subject').addEventListener('change', handleTeacherSubjectChange);
-
-        function handleTeacherGradeChange() {
-            const grade = document.getElementById('teacher-filter-grade').value;
-            const subSelect = document.getElementById('teacher-filter-subject');
-            const currentSubVal = subSelect.value;
-            
-            subSelect.innerHTML = `<option value="">-- เลือกวิชา --</option>`;
-            document.getElementById('teacher-subjects-container').innerHTML = `<p class="text-center text-gray-500 py-8">กรุณาเลือกวิชาเพื่อดูรายชื่อนักเรียน</p>`;
-            document.getElementById('btn-teacher-export').disabled = true;
-            document.getElementById('btn-teacher-export').classList.add('opacity-50', 'cursor-not-allowed');
-
-            if (!grade) {
-                subSelect.disabled = true;
-                return;
-            }
-
-            subSelect.disabled = false;
-            
-            // Filter subjects available for this grade
-            const validSubs = currentTeacherSubjects.filter(sub => {
-                if (grade === 'all') return true;
-                const grades = String(sub.allowed_grades || 'all').split(',').map(s=>s.trim());
-                return grades.includes('all') || grades.includes('') || grades.includes(grade);
-            });
-
-            validSubs.forEach(sub => {
-                subSelect.innerHTML += `<option value="${sub.id}">${sub.id} - ${sub.subject_name}</option>`;
-            });
-
-            if (validSubs.some(s => s.id === currentSubVal)) {
-                subSelect.value = currentSubVal;
-                handleTeacherSubjectChange();
-            }
-        }
-
-        function handleTeacherSubjectChange() {
-            const subId = document.getElementById('teacher-filter-subject').value;
-            const grade = document.getElementById('teacher-filter-grade').value;
+        function renderTeacherList() {
+            const sid = document.getElementById('teacher-filter-subject').value;
+            const gid = document.getElementById('teacher-filter-grade').value;
             const container = document.getElementById('teacher-subjects-container');
-            const exportBtn = document.getElementById('btn-teacher-export');
+            const btn = document.getElementById('btn-teacher-export');
 
-            if (!subId) {
-                container.innerHTML = `<p class="text-center text-gray-500 py-8">กรุณาเลือกวิชาเพื่อดูรายชื่อนักเรียน</p>`;
-                exportBtn.disabled = true;
-                exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                selectedTeacherSubject = null;
+            if (!sid) {
+                btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed');
                 return;
             }
 
-            const sub = currentTeacherSubjects.find(s => s.id === subId);
-            selectedTeacherSubject = sub;
-            exportBtn.disabled = false;
-            exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-            // Filter enrolled students (and optionally by selected grade if it's not "all")
-            let enrolled = studentsList.filter(s => s.registered_subject_id === sub.id);
-            if (grade !== 'all') {
-                enrolled = enrolled.filter(s => String(s.grade).trim() === grade);
-            }
+            btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            const enrolled = studentsList.filter(s => s.registered_subject_id === sid && (gid === 'all' || s.grade == gid));
             
-            let rowsHtml = '';
-            enrolled.forEach((stu, idx) => {
-                rowsHtml += `
+            let html = `
+                <div class="border rounded-lg overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-blue-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-blue-800 uppercase">ลำดับ</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-blue-800 uppercase">รหัส</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-blue-800 uppercase">ชื่อ-นามสกุล</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-blue-800 uppercase">ชั้น/ห้อง</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-blue-800 uppercase">เวลาที่ยืนยัน</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+            `;
+
+            enrolled.sort((a,b) => a.grade - b.grade || a.room - b.room || a.no - b.no).forEach((s, i) => {
+                html += `
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${idx+1}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stu.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${stu.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ม.${stu.grade||'-'}/${stu.room||'-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(stu.timestamp).toLocaleString('th-TH')}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">${i+1}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-gray-700">${s.id}</td>
+                        <td class="px-6 py-4 text-sm text-gray-700">${s.name}</td>
+                        <td class="px-6 py-4 text-sm text-center text-gray-500">ม.${s.grade}/${s.room}</td>
+                        <td class="px-6 py-4 text-sm text-center text-gray-400">${new Date(s.timestamp).toLocaleString('th-TH')}</td>
                     </tr>
                 `;
             });
-            if(enrolled.length === 0) rowsHtml = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">ยังไม่มีนักเรียนลงทะเบียน</td></tr>`;
 
-            container.innerHTML = `
-                <div class="border border-gray-200 rounded-xl overflow-hidden">
-                    <div class="px-6 py-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-bold text-blue-800">${sub.id} - ${sub.subject_name}</h3>
-                            <p class="text-sm text-blue-600">ลงทะเบียนแล้ว ${enrolled.length} คน (ตัวกรอง: ม.${grade === 'all' ? 'ทุกระดับชั้น' : grade})</p>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ลำดับ</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">รหัส</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อ-นามสกุล</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชั้น/ห้อง</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">เวลา</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">${rowsHtml}</tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            if (enrolled.length === 0) html += '<tr><td colspan="5" class="py-10 text-center text-gray-400 italic">ไม่พบรายชื่อนักเรียนในเงื่อนไขนี้</td></tr>';
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+            
+            btn.onclick = () => {
+                const sub = subjectsList.find(x => x.id === sid);
+                const data = enrolled.map((s, i) => ({
+                    'ลำดับ': i+1,
+                    'รหัสนักเรียน': s.id,
+                    'ชื่อ-นามสกุล': s.name,
+                    'ระดับชั้น': s.grade,
+                    'ห้อง': s.room,
+                    'เลขที่': s.no || '-',
+                    'เวลาลงทะเบียน': new Date(s.timestamp).toLocaleString('th-TH')
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "รายชื่อ");
+                XLSX.writeFile(wb, `รายชื่อ_${sid}_${sub.subject_name}.xlsx`);
+            };
         }
 
-        document.getElementById('btn-teacher-export').onclick = () => {
-            if(!selectedTeacherSubject) return;
-            const sub = selectedTeacherSubject;
-            const grade = document.getElementById('teacher-filter-grade').value;
-            
-            let enrolled = studentsList.filter(s => s.registered_subject_id === sub.id);
-            if (grade !== 'all') {
-                enrolled = enrolled.filter(s => String(s.grade).trim() === grade);
-            }
-
-            const exportData = enrolled.map((stu, i) => ({
-                'ลำดับ': i+1,
-                'รหัสนักเรียน': stu.id,
-                'ชื่อ-นามสกุล': stu.name,
-                'ระดับชั้น': stu.grade || '',
-                'ห้อง': stu.room || '',
-                'เวลาที่ลงทะเบียน': new Date(stu.timestamp).toLocaleString('th-TH')
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "รายชื่อนักเรียน");
-            XLSX.writeFile(wb, `นักเรียน_${sub.id}_ม.${grade}_${new Date().getTime()}.xlsx`);
-        };
-
         // --- Admin Dashboard ---
+
         function initAdminDashboard() {
             showScreen('screen-admin');
-            attachGlobalDataListeners(() => { renderAdminOverview(); renderAdminDetailedStats(); renderAdminStudents(); });
             
-            unsubStaff = onSnapshot(collection(db, getPath('staff')), (snap) => {
-                staffList = [];
-                snap.forEach(doc => staffList.push({ id: doc.id, ...doc.data() }));
+            // Global data listeners for Admin
+            onSnapshot(collection(db, getPath('subjects')), (snap) => {
+                subjectsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderAdminOverview();
+                renderAdminSubjectsManage();
+            });
+
+            onSnapshot(collection(db, getPath('students')), (snap) => {
+                studentsList = snap.docs.map(d => ({id: d.id, ...d.data()}));
+                renderAdminOverview();
+                renderAdminStudentsManage();
+                renderAdminDetailedStats();
+            });
+
+            onSnapshot(collection(db, getPath('staff')), (snap) => {
+                staffList = snap.docs.map(d => ({id: d.id, ...d.data()}));
                 renderAdminStaff();
             });
 
-            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.admin-tab-btn').forEach(b => {
-                        b.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
-                        b.classList.add('text-gray-500');
-                    });
-                    e.target.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
-                    e.target.classList.remove('text-gray-500');
-                    
-                    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(e.target.getAttribute('data-target')).classList.remove('hidden');
-                });
-            });
-
-            const sysEndInput = document.getElementById('system-end-time');
-            if(systemSettings.endTime) {
-                const d = new Date(systemSettings.endTime);
-                sysEndInput.value = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-            }
-            updateAdminSettingUI();
+            // Set Admin Time Inputs
+            if (systemSettings.startTime) document.getElementById('system-start-time').value = new Date(systemSettings.startTime - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+            if (systemSettings.endTime) document.getElementById('system-end-time').value = new Date(systemSettings.endTime - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
         }
 
-        function updateAdminSettingUI() {
-            const btn = document.getElementById('toggle-system-status');
-            if (systemSettings.isOpen) {
-                btn.className = "px-4 py-2 rounded-full font-bold transition-colors bg-green-500 text-white shadow";
-                btn.innerText = "สถานะ: เปิดรับลงทะเบียน";
-            } else {
-                btn.className = "px-4 py-2 rounded-full font-bold transition-colors bg-red-500 text-white shadow";
-                btn.innerText = "สถานะ: ปิดระบบอยู่";
-            }
-        }
-
-        document.getElementById('toggle-system-status').addEventListener('click', () => {
-            const newState = !systemSettings.isOpen;
-            setDoc(doc(db, getPath('settings'), 'system'), { isOpen: newState }, { merge: true });
-        });
-
-        document.getElementById('btn-save-settings').addEventListener('click', () => {
-            const endVal = document.getElementById('system-end-time').value;
-            if(!endVal) return Swal.fire('Error', 'กรุณาระบุเวลาสิ้นสุด', 'warning');
-            const endMs = new Date(endVal).getTime();
-            setDoc(doc(db, getPath('settings'), 'system'), { endTime: endMs }, { merge: true })
-            .then(() => Swal.fire('บันทึกสำเร็จ', 'อัปเดตการตั้งค่าระบบแล้ว', 'success'));
+        // Tab Switching logic
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'));
+                btn.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                
+                document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(btn.getAttribute('data-target')).classList.remove('hidden');
+            };
         });
 
         function renderAdminOverview() {
@@ -1169,593 +1042,396 @@
             document.getElementById('stat-registered').innerText = reg;
             document.getElementById('stat-unregistered').innerText = total - reg;
 
-            const tbodySub = document.getElementById('admin-subject-list');
-            tbodySub.innerHTML = '';
-            [...subjectsList].sort((a,b) => a.id.localeCompare(b.id)).forEach(sub => {
-                tbodySub.insertAdjacentHTML('beforeend', `
+            const tbody = document.getElementById('admin-overview-subject-list');
+            tbody.innerHTML = '';
+            subjectsList.sort((a,b) => (b.total_slots - b.remaining_slots) - (a.total_slots - a.remaining_slots)).forEach(s => {
+                const booked = s.total_slots - s.remaining_slots;
+                const pct = Math.floor((booked/s.total_slots)*100);
+                tbody.insertAdjacentHTML('beforeend', `
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${sub.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.subject_name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.teacher}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${sub.location || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-500">${sub.total_slots - sub.remaining_slots} / ${sub.total_slots}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                            <button onclick="editSubject('${sub.id}')" class="text-blue-600 hover:text-blue-900 font-medium">แก้ไข</button>
+                        <td class="px-6 py-4 font-mono text-xs text-blue-500">${s.id}</td>
+                        <td class="px-6 py-4 font-bold text-gray-700">${s.subject_name}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="text-blue-600 font-bold">${booked}</span> / ${s.total_slots}
+                            <div class="text-[9px] text-gray-400">${pct}% เต็ม</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            ${s.remaining_slots <= 0 ? '<span class="text-red-500 text-xs font-bold">เต็ม</span>':'<span class="text-green-500 text-xs font-bold">ว่าง</span>'}
                         </td>
                     </tr>
                 `);
             });
         }
 
-        // Inline Edit: Subject
-        window.editSubject = async (subId) => {
-            const sub = subjectsList.find(s => s.id === subId);
-            if(!sub) return;
+        function renderAdminSubjectsManage() {
+            const tbody = document.getElementById('admin-subject-manage-list');
+            tbody.innerHTML = subjectsList.sort((a,b) => a.id.localeCompare(b.id)).map(s => `
+                <tr>
+                    <td class="px-6 py-4 font-mono text-blue-600">${s.id}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold">${s.subject_name}</div>
+                        <div class="text-xs text-gray-400">ครู: ${s.teacher}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center font-bold">${s.total_slots}</td>
+                    <td class="px-6 py-4 text-center text-xs">${s.allowed_grades || 'ทุกระดับชั้น'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="editSubject('${s.id}')" class="text-blue-600 hover:underline mr-2">แก้ไข</button>
+                        <button onclick="deleteSubject('${s.id}')" class="text-red-500 hover:underline">ลบ</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-            const { value: formValues } = await Swal.fire({
-                title: 'แก้ไขข้อมูลวิชา',
-                html: `
-                    <div class="space-y-3 text-left">
-                        <div><label class="text-sm font-bold">ชื่อวิชา</label><input id="swal-s-name" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.subject_name}"></div>
-                        <div><label class="text-sm font-bold">ผู้สอน</label><input id="swal-s-teacher" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.teacher || ''}"></div>
-                        <div><label class="text-sm font-bold">สถานที่</label><input id="swal-s-loc" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.location || ''}"></div>
-                        <div class="flex gap-2">
-                            <div class="w-1/2"><label class="text-sm font-bold">จำนวนรับรวม</label><input id="swal-s-total" type="number" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.total_slots}"></div>
-                            <div class="w-1/2"><label class="text-sm font-bold">ที่นั่งว่าง</label><input id="swal-s-remain" type="number" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.remaining_slots}"></div>
-                        </div>
-                        <div><label class="text-sm font-bold">ระดับชั้น (เช่น 4,5 หรือ all)</label><input id="swal-s-grade" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.allowed_grades || 'all'}"></div>
-                        <div><label class="text-sm font-bold">ห้อง (เช่น 1,2 หรือ all)</label><input id="swal-s-room" class="swal2-input !m-0 !mt-1 !w-full" value="${sub.allowed_rooms || 'all'}"></div>
-                    </div>
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'บันทึก',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    return {
-                        subject_name: document.getElementById('swal-s-name').value,
-                        teacher: document.getElementById('swal-s-teacher').value,
-                        location: document.getElementById('swal-s-loc').value,
-                        total_slots: parseInt(document.getElementById('swal-s-total').value),
-                        remaining_slots: parseInt(document.getElementById('swal-s-remain').value),
-                        allowed_grades: document.getElementById('swal-s-grade').value,
-                        allowed_rooms: document.getElementById('swal-s-room').value
-                    }
-                }
+        function renderAdminStudentsManage() {
+            const tbody = document.getElementById('admin-student-manage-list');
+            const search = document.getElementById('admin-search-student').value.toLowerCase();
+            const filter = document.getElementById('admin-filter-status').value;
+
+            const filtered = studentsList.filter(s => {
+                const matchSearch = s.id.includes(search) || s.name.toLowerCase().includes(search);
+                const matchFilter = filter === 'all' || (filter === 'registered' ? s.status === 'registered' : s.status !== 'registered');
+                return matchSearch && matchFilter;
             });
 
-            if (formValues) {
-                try {
-                    await updateDoc(doc(db, getPath('subjects'), subId), formValues);
-                    Swal.fire('สำเร็จ', 'อัปเดตข้อมูลวิชาแล้ว', 'success');
-                } catch(e) { Swal.fire('Error', e.message, 'error'); }
-            }
-        };
+            tbody.innerHTML = filtered.slice(0, 50).map(s => `
+                <tr>
+                    <td class="px-6 py-4 font-mono">${s.id}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold">${s.name}</div>
+                        <div class="text-[10px] text-gray-400">${s.status === 'registered' ? 'ยืนยันแล้ว':'รอดำเนินการ'}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">ม.${s.grade}/${s.room}</td>
+                    <td class="px-6 py-4 text-center font-bold text-blue-600">${s.registered_subject_id || '-'}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="editStudent('${s.id}')" class="text-blue-600 hover:underline mr-2">แก้ไข</button>
+                        <button onclick="deleteStudent('${s.id}')" class="text-red-500 hover:underline">ลบ</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            if (filtered.length > 50) tbody.innerHTML += `<tr><td colspan="5" class="py-4 text-center text-gray-400 italic">แสดงผลเฉพาะ 50 รายการแรกที่ตรงกับคำค้น</td></tr>`;
+        }
 
-        // Inline Edit: Student
-        window.editStudent = async (stuId) => {
-            const stu = studentsList.find(s => s.id === stuId);
-            if(!stu) return;
-
-            const { value: formValues } = await Swal.fire({
-                title: 'แก้ไขข้อมูลนักเรียน',
-                html: `
-                    <div class="space-y-3 text-left">
-                        <div><label class="text-sm font-bold">ชื่อ-นามสกุล</label><input id="swal-u-name" class="swal2-input !m-0 !mt-1 !w-full" value="${stu.name}"></div>
-                        <div class="flex gap-2">
-                            <div class="w-1/2"><label class="text-sm font-bold">ระดับชั้น</label><input id="swal-u-grade" class="swal2-input !m-0 !mt-1 !w-full" value="${stu.grade || ''}"></div>
-                            <div class="w-1/2"><label class="text-sm font-bold">ห้อง</label><input id="swal-u-room" class="swal2-input !m-0 !mt-1 !w-full" value="${stu.room || ''}"></div>
-                        </div>
-                    </div>
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'บันทึก',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    return {
-                        name: document.getElementById('swal-u-name').value,
-                        grade: document.getElementById('swal-u-grade').value,
-                        room: document.getElementById('swal-u-room').value
-                    }
-                }
-            });
-
-            if (formValues) {
-                try {
-                    await updateDoc(doc(db, getPath('students'), stuId), formValues);
-                    Swal.fire('สำเร็จ', 'อัปเดตข้อมูลนักเรียนแล้ว', 'success');
-                } catch(e) { Swal.fire('Error', e.message, 'error'); }
-            }
-        };
-
-        // Add Subject Manually
-        window.addSubject = async () => {
-            const { value: formValues } = await Swal.fire({
-                title: 'เพิ่มรายวิชาใหม่',
-                html: `
-                    <div class="space-y-3 text-left">
-                        <div><label class="text-sm font-bold">รหัสวิชา (ต้องไม่ซ้ำ)</label><input id="swal-a-id" class="swal2-input !m-0 !mt-1 !w-full" placeholder="เช่น ENG101"></div>
-                        <div><label class="text-sm font-bold">ชื่อวิชา</label><input id="swal-a-name" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        <div><label class="text-sm font-bold">ผู้สอน</label><input id="swal-a-teacher" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        <div><label class="text-sm font-bold">สถานที่</label><input id="swal-a-loc" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        <div><label class="text-sm font-bold">จำนวนรับรวม</label><input id="swal-a-total" type="number" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        <div><label class="text-sm font-bold">ระดับชั้น (เช่น 4,5 หรือ all)</label><input id="swal-a-grade" class="swal2-input !m-0 !mt-1 !w-full" value="all"></div>
-                        <div><label class="text-sm font-bold">ห้อง (เช่น 1,2 หรือ all)</label><input id="swal-a-room" class="swal2-input !m-0 !mt-1 !w-full" value="all"></div>
-                    </div>
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'เพิ่มวิชา',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    const id = document.getElementById('swal-a-id').value.trim();
-                    if (!id) {
-                        Swal.showValidationMessage('กรุณากรอกรหัสวิชา');
-                        return false;
-                    }
-                    return {
-                        id: id,
-                        subject_name: document.getElementById('swal-a-name').value,
-                        teacher: document.getElementById('swal-a-teacher').value || '-',
-                        location: document.getElementById('swal-a-loc').value || '-',
-                        total_slots: parseInt(document.getElementById('swal-a-total').value) || 0,
-                        remaining_slots: parseInt(document.getElementById('swal-a-total').value) || 0,
-                        allowed_grades: document.getElementById('swal-a-grade').value || 'all',
-                        allowed_rooms: document.getElementById('swal-a-room').value || 'all'
-                    }
-                }
-            });
-
-            if (formValues) {
-                try {
-                    const docRef = doc(db, getPath('subjects'), formValues.id);
-                    const snap = await getDoc(docRef);
-                    if (snap.exists()) return Swal.fire('ข้อผิดพลาด', 'รหัสวิชานี้มีอยู่ในระบบแล้ว', 'error');
-                    
-                    delete formValues.id;
-                    await setDoc(docRef, formValues);
-                    Swal.fire('สำเร็จ', 'เพิ่มวิชาเรียบร้อยแล้ว', 'success');
-                } catch(e) { Swal.fire('Error', e.message, 'error'); }
-            }
-        };
-
-        // Add Student Manually
-        window.addStudent = async () => {
-            const { value: formValues } = await Swal.fire({
-                title: 'เพิ่มนักเรียนใหม่',
-                html: `
-                    <div class="space-y-3 text-left">
-                        <div><label class="text-sm font-bold">รหัสนักเรียน (ชื่อผู้ใช้)</label><input id="swal-u-id" class="swal2-input !m-0 !mt-1 !w-full" placeholder="เช่น 66001"></div>
-                        <div><label class="text-sm font-bold">ชื่อ-นามสกุล</label><input id="swal-u-name" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        <div class="flex gap-2">
-                            <div class="w-1/2"><label class="text-sm font-bold">ระดับชั้น</label><input id="swal-u-grade" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                            <div class="w-1/2"><label class="text-sm font-bold">ห้อง</label><input id="swal-u-room" class="swal2-input !m-0 !mt-1 !w-full"></div>
-                        </div>
-                    </div>
-                `,
-                focusConfirm: false,
-                showCancelButton: true,
-                confirmButtonText: 'เพิ่มนักเรียน',
-                cancelButtonText: 'ยกเลิก',
-                preConfirm: () => {
-                    const id = document.getElementById('swal-u-id').value.trim();
-                    if (!id) {
-                        Swal.showValidationMessage('กรุณากรอกรหัสนักเรียน');
-                        return false;
-                    }
-                    return {
-                        id: id,
-                        name: document.getElementById('swal-u-name').value || 'Unknown',
-                        grade: document.getElementById('swal-u-grade').value || '',
-                        room: document.getElementById('swal-u-room').value || '',
-                        status: 'unregistered',
-                        registered_subject_id: null
-                    }
-                }
-            });
-
-            if (formValues) {
-                try {
-                    const docRef = doc(db, getPath('students'), formValues.id);
-                    const snap = await getDoc(docRef);
-                    if (snap.exists()) return Swal.fire('ข้อผิดพลาด', 'รหัสนักเรียนนี้มีอยู่ในระบบแล้ว', 'error');
-                    
-                    delete formValues.id;
-                    await setDoc(docRef, formValues);
-                    Swal.fire('สำเร็จ', 'เพิ่มนักเรียนเรียบร้อยแล้ว', 'success');
-                } catch(e) { Swal.fire('Error', e.message, 'error'); }
-            }
-        };
+        document.getElementById('admin-search-student').oninput = renderAdminStudentsManage;
+        document.getElementById('admin-filter-status').onchange = renderAdminStudentsManage;
 
         function renderAdminDetailedStats() {
             const tbody = document.getElementById('admin-detailed-stats');
-            tbody.innerHTML = '';
-            
             const stats = {};
             studentsList.forEach(s => {
-                const grade = s.grade ? String(s.grade).trim() : '?';
-                const room = s.room ? String(s.room).trim() : '?';
-                const key = `ม.${grade}/${room}`;
-                
-                if (!stats[key]) stats[key] = { total: 0, reg: 0, unreg: 0, keyStr: key, sortKey: grade.padStart(2,'0')+room.padStart(2,'0') };
+                const key = `ม.${s.grade}/${s.room}`;
+                if(!stats[key]) stats[key] = {total: 0, reg: 0};
                 stats[key].total++;
-                if (s.status === 'registered') stats[key].reg++;
-                else stats[key].unreg++;
+                if(s.status === 'registered') stats[key].reg++;
             });
 
-            const sortedKeys = Object.values(stats).sort((a,b) => a.sortKey.localeCompare(b.sortKey));
-
-            sortedKeys.forEach(st => {
-                tbody.insertAdjacentHTML('beforeend', `
+            tbody.innerHTML = Object.entries(stats).sort().map(([k, v]) => {
+                const pct = Math.floor((v.reg/v.total)*100);
+                return `
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-800">${st.keyStr}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-600">${st.total}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-green-600">${st.reg}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-red-600">${st.unreg}</td>
+                        <td class="px-6 py-3 font-bold text-gray-600">${k}</td>
+                        <td class="px-6 py-3 text-center">${v.total}</td>
+                        <td class="px-6 py-3 text-center text-green-600 font-bold">${v.reg}</td>
+                        <td class="px-6 py-3 text-center text-red-500 font-bold">${v.total - v.reg}</td>
+                        <td class="px-6 py-3 text-center">
+                            <div class="flex items-center justify-center">
+                                <span class="text-xs mr-2">${pct}%</span>
+                                <div class="w-16 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-blue-500 h-full" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
-                `);
-            });
+                `;
+            }).join('');
         }
 
-        function renderAdminStudents() {
-            const queryVal = (document.getElementById('admin-search-student')?.value || '').toLowerCase();
-            const filter = document.getElementById('admin-filter-status')?.value || 'all';
-            const tbody = document.getElementById('admin-student-list');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const filtered = studentsList.filter(s => {
-                const matchQuery = s.id.toLowerCase().includes(queryVal) || (s.name && s.name.toLowerCase().includes(queryVal));
-                const matchFilter = filter === 'all' || 
-                                  (filter === 'registered' && s.status === 'registered') || 
-                                  (filter === 'unregistered' && s.status !== 'registered');
-                return matchQuery && matchFilter;
-            });
-
-            filtered.forEach(stu => {
-                const isReg = stu.status === 'registered';
-                const subName = isReg ? (subjectsList.find(sub => sub.id === stu.registered_subject_id)?.subject_name || stu.registered_subject_id) : '-';
-                const statusBadge = isReg
-                    ? `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">ลงแล้ว</span>`
-                    : `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">ยังไม่ลง</span>`;
-                
-                const btnReset = isReg ? `<button onclick="adminResetStudent('${stu.id}', '${stu.registered_subject_id}')" class="text-red-600 hover:text-red-900 text-xs font-medium border border-red-600 px-2 py-1 rounded">รีเซ็ตวิชา</button>` : '';
-                const btnEdit = `<button onclick="editStudent('${stu.id}')" class="text-blue-600 hover:text-blue-900 text-xs font-medium border border-blue-600 px-2 py-1 rounded ml-1">แก้ไข</button>`;
-
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${stu.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${stu.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ม.${stu.grade || '-'}/${stu.room || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">${statusBadge}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${subName}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">${btnReset}${btnEdit}</td>
-                    </tr>
-                `);
-            });
+        function renderAdminStaff() {
+            const tbody = document.getElementById('admin-staff-list');
+            tbody.innerHTML = staffList.map(s => `
+                <tr>
+                    <td class="px-6 py-4 font-mono">${s.username}</td>
+                    <td class="px-6 py-4 font-bold">${s.name}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.role === 'admin' ? 'bg-indigo-100 text-indigo-600':'bg-blue-100 text-blue-600'} uppercase">
+                            ${s.role}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="editStaff('${s.id}')" class="text-blue-600 mr-2">แก้ไข</button>
+                        ${s.id !== 'admin' ? `<button onclick="deleteStaff('${s.id}')" class="text-red-500">ลบ</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        document.getElementById('admin-search-student')?.addEventListener('input', renderAdminStudents);
-        document.getElementById('admin-filter-status')?.addEventListener('change', renderAdminStudents);
+        // --- CRUD Modals (using SweetAlert2) ---
 
-        window.adminResetStudent = async (studentId, subjectId) => {
-            const result = await Swal.fire({
-                title: 'ยืนยันการรีเซ็ต?',
-                text: 'ต้องการยกเลิกการลงทะเบียนของรหัส ' + studentId + ' ใช่หรือไม่?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ใช่, รีเซ็ต',
-                cancelButtonText: 'ยกเลิก'
+        window.addSubject = async () => {
+            const { value: f } = await Swal.fire({
+                title: 'เพิ่มวิชาใหม่',
+                html: `<div class="text-left space-y-2">
+                    <label class="text-xs font-bold text-gray-400">รหัสวิชา</label><input id="a-id" class="swal2-input !m-0 !w-full" placeholder="ART101">
+                    <label class="text-xs font-bold text-gray-400">ชื่อวิชา</label><input id="a-name" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">ผู้สอน</label><input id="a-teacher" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">สถานที่</label><input id="a-loc" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">จำนวนรับรวม</label><input id="a-slots" type="number" class="swal2-input !m-0 !w-full" value="30">
+                    <label class="text-xs font-bold text-gray-400">ระดับชั้น (เว้นว่าง = รับทุกชั้น)</label><input id="a-grades" class="swal2-input !m-0 !w-full" placeholder="4, 5">
+                </div>`,
+                preConfirm: () => ({
+                    id: document.getElementById('a-id').value.trim(),
+                    subject_name: document.getElementById('a-name').value.trim(),
+                    teacher: document.getElementById('a-teacher').value.trim(),
+                    location: document.getElementById('a-loc').value.trim(),
+                    total_slots: parseInt(document.getElementById('a-slots').value) || 0,
+                    allowed_grades: document.getElementById('a-grades').value.trim() || 'all'
+                })
             });
-
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'กำลังประมวลผล...', didOpen: () => Swal.showLoading() });
-                try {
-                    await runTransaction(db, async (transaction) => {
-                        const studentRef = doc(db, getPath('students'), studentId);
-                        const subjectRef = doc(db, getPath('subjects'), subjectId);
-                        
-                        const subDoc = await transaction.get(subjectRef);
-                        if (subDoc.exists()) {
-                            transaction.update(subjectRef, { remaining_slots: subDoc.data().remaining_slots + 1 });
-                        }
-                        
-                        transaction.update(studentRef, { 
-                            status: 'unregistered', 
-                            registered_subject_id: null 
-                        });
-                    });
-                    Swal.fire('สำเร็จ', 'รีเซ็ตข้อมูลนักเรียนเรียบร้อยแล้ว', 'success');
-                } catch (e) {
-                    Swal.fire('Error', e.message, 'error');
-                }
+            if(f && f.id) {
+                await setDoc(doc(db, getPath('subjects'), f.id), { ...f, remaining_slots: f.total_slots });
+                Swal.fire('สำเร็จ', 'เพิ่มวิชาเรียบร้อย', 'success');
             }
         };
 
-        // --- Data Clearing Logic ---
-        window.clearSystemData = async (type) => {
-            const typeNames = {
-                'students': 'ล้างเฉพาะข้อมูล "นักเรียน"',
-                'subjects': 'ล้างเฉพาะข้อมูล "วิชา"',
-                'staff': 'ล้างเฉพาะข้อมูล "บุคลากร" (ยกเว้นแอดมินหลัก)',
-                'all': 'ล้างข้อมูล "ทั้งหมด" ในระบบ'
-            };
-
-            const res = await Swal.fire({
-                title: 'ยืนยันการล้างข้อมูล?',
-                html: `คุณกำลังเลือก: <b>${typeNames[type]}</b><br><br>ข้อมูลจะหายไปอย่างถาวร ยืนยันใช่หรือไม่?`,
-                icon: 'error',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'ใช่, ลบข้อมูลทิ้ง',
-                cancelButtonText: 'ยกเลิก'
+        window.editSubject = async (id) => {
+            const s = subjectsList.find(x => x.id === id);
+            const { value: f } = await Swal.fire({
+                title: 'แก้ไขข้อมูลวิชา',
+                html: `<div class="text-left space-y-2">
+                    <label class="text-xs font-bold text-gray-400">ชื่อวิชา</label><input id="e-name" class="swal2-input !m-0 !w-full" value="${s.subject_name}">
+                    <label class="text-xs font-bold text-gray-400">ผู้สอน</label><input id="e-teacher" class="swal2-input !m-0 !w-full" value="${s.teacher}">
+                    <label class="text-xs font-bold text-gray-400">จำนวนรับรวม (ห้ามลดต่ำกว่าคนลงทะเบียนแล้ว)</label><input id="e-slots" type="number" class="swal2-input !m-0 !w-full" value="${s.total_slots}">
+                    <label class="text-xs font-bold text-gray-400">ที่นั่งคงเหลือปัจจุบัน (คำนวณอัตโนมัติหากลด/เพิ่มจำนวนรับ)</label><input id="e-rem" type="number" class="swal2-input !m-0 !w-full" value="${s.remaining_slots}">
+                </div>`,
+                preConfirm: () => ({
+                    subject_name: document.getElementById('e-name').value.trim(),
+                    teacher: document.getElementById('e-teacher').value.trim(),
+                    total_slots: parseInt(document.getElementById('e-slots').value) || 0,
+                    remaining_slots: parseInt(document.getElementById('e-rem').value) || 0
+                })
             });
+            if(f) {
+                await updateDoc(doc(db, getPath('subjects'), id), f);
+                Swal.fire('สำเร็จ', 'แก้ไขข้อมูลแล้ว', 'success');
+            }
+        };
 
-            if (res.isConfirmed) {
-                Swal.fire({ title: 'กำลังล้างข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                try {
-                    const deleteCollection = async (colName, filterFn = null) => {
-                        const snap = await getDocs(collection(db, getPath(colName)));
-                        // Chunking for batch (limit 500)
-                        let batches = [];
-                        let curBatch = writeBatch(db);
-                        let count = 0;
-                        
-                        snap.forEach(d => {
-                            if (filterFn && !filterFn(d)) return;
-                            curBatch.delete(d.ref);
-                            count++;
-                            if (count === 400) {
-                                batches.push(curBatch);
-                                curBatch = writeBatch(db);
-                                count = 0;
-                            }
-                        });
-                        if (count > 0) batches.push(curBatch);
-                        for(let b of batches) await b.commit();
+        window.deleteSubject = async (id) => {
+            if(confirm(`ยืนยันการลบวิชา ${id}? การลงทะเบียนของนักเรียนในวิชานี้จะยังคงอยู่ในระบบแต่จะไม่พบข้อมูลวิชา`)) {
+                await deleteDoc(doc(db, getPath('subjects'), id));
+            }
+        };
+
+        window.addStudent = async () => {
+            const { value: f } = await Swal.fire({
+                title: 'เพิ่มนักเรียน',
+                html: `<div class="text-left space-y-2">
+                    <label class="text-xs font-bold text-gray-400">รหัสนักเรียน</label><input id="sa-id" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">ชื่อ-นามสกุล</label><input id="sa-name" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">ชั้น</label><input id="sa-g" type="number" class="swal2-input !m-0 !w-full">
+                    <label class="text-xs font-bold text-gray-400">ห้อง</label><input id="sa-r" type="number" class="swal2-input !m-0 !w-full">
+                </div>`,
+                preConfirm: () => ({
+                    id: document.getElementById('sa-id').value.trim(),
+                    name: document.getElementById('sa-name').value.trim(),
+                    grade: document.getElementById('sa-g').value,
+                    room: document.getElementById('sa-r').value
+                })
+            });
+            if(f && f.id) {
+                await setDoc(doc(db, getPath('students'), f.id), { ...f, status: 'unregistered', registered_subject_id: null });
+                Swal.fire('สำเร็จ', 'เพิ่มรายชื่อแล้ว', 'success');
+            }
+        };
+
+        window.editStudent = async (id) => {
+            const s = studentsList.find(x => x.id === id);
+            const { value: f } = await Swal.fire({
+                title: 'แก้ไขข้อมูลนักเรียน',
+                html: `<div class="text-left space-y-2">
+                    <label class="text-xs font-bold text-gray-400">ชื่อ-นามสกุล</label><input id="se-name" class="swal2-input !m-0 !w-full" value="${s.name}">
+                    <label class="text-xs font-bold text-gray-400">ชั้น</label><input id="se-g" type="number" class="swal2-input !m-0 !w-full" value="${s.grade}">
+                    <label class="text-xs font-bold text-gray-400">ห้อง</label><input id="se-r" type="number" class="swal2-input !m-0 !w-full" value="${s.room}">
+                    <label class="text-xs font-bold text-gray-400">รีเซ็ตวิชาที่เลือกลงทะเบียน (ให้เว้นว่างหากต้องการรีเซ็ต)</label>
+                    <input id="se-sub" class="swal2-input !m-0 !w-full" value="${s.registered_subject_id || ''}">
+                </div>`,
+                preConfirm: () => {
+                    const subId = document.getElementById('se-sub').value.trim();
+                    return {
+                        name: document.getElementById('se-name').value.trim(),
+                        grade: document.getElementById('se-g').value,
+                        room: document.getElementById('se-r').value,
+                        registered_subject_id: subId || null,
+                        status: subId ? 'registered' : 'unregistered'
                     };
+                }
+            });
+            if(f) {
+                // Warning: Manual reset from here doesn't automatically return slot to subject count.
+                // Recommend using the actual registration system or manual subject remaining_slots correction.
+                await updateDoc(doc(db, getPath('students'), id), f);
+                Swal.fire('เรียบร้อย', 'อัปเดตข้อมูลแล้ว', 'success');
+            }
+        };
 
-                    if (type === 'students' || type === 'all') {
-                        await deleteCollection('students');
-                        // Reset subjects slots if deleting students but keeping subjects
-                        if (type === 'students') {
-                            let b = writeBatch(db);
-                            subjectsList.forEach(s => {
-                                b.update(doc(db, getPath('subjects'), s.id), { remaining_slots: s.total_slots });
-                            });
-                            await b.commit();
-                        }
-                    }
-                    if (type === 'subjects' || type === 'all') {
-                        await deleteCollection('subjects');
-                        // Unregister all students if subjects are cleared but students remain
-                        if (type === 'subjects') {
-                            let b = writeBatch(db);
-                            let count = 0;
-                            let bArr = [];
-                            studentsList.forEach(s => {
-                                if(s.status === 'registered') {
-                                    b.update(doc(db, getPath('students'), s.id), { status: 'unregistered', registered_subject_id: null });
-                                    count++;
-                                    if(count === 400) {
-                                        bArr.push(b);
-                                        b = writeBatch(db);
-                                        count = 0;
-                                    }
-                                }
-                            });
-                            if (count > 0) bArr.push(b);
-                            for(let batch of bArr) await batch.commit();
-                        }
-                    }
-                    if (type === 'staff' || type === 'all') {
-                        // Delete staff EXCEPT 'admin'
-                        await deleteCollection('staff', (d) => d.id !== 'admin');
-                    }
-                    if (type === 'all') {
-                        // Reset settings
-                        await setDoc(doc(db, getPath('settings'), 'system'), { isOpen: false, startTime: Date.now(), endTime: Date.now() + 86400000 });
-                    }
-
-                    Swal.fire('เรียบร้อย', 'ล้างข้อมูลสำเร็จแล้ว', 'success');
-                } catch(e) { Swal.fire('Error', e.message, 'error'); }
+        window.deleteStudent = async (id) => {
+            if(confirm(`ลบรหัสนักเรียน ${id} ออกจากฐานข้อมูล?`)) {
+                await deleteDoc(doc(db, getPath('students'), id));
             }
         };
 
         // --- Import / Export System ---
-        document.getElementById('btn-download-template').addEventListener('click', () => {
-            const wb = XLSX.utils.book_new();
-            const wsStudents = XLSX.utils.json_to_sheet([
-                { id: '66001', name: 'นายเรียนดี ขยันยิ่ง', grade: '4', room: '1' }
-            ]);
-            const wsSubjects = XLSX.utils.json_to_sheet([
-                { id: 'ENG101', subject_name: 'ภาษาอังกฤษเพื่อการสื่อสาร', teacher: 'ครูสมศรี', location: 'ห้อง 101', total_slots: 30, allowed_grades: '4,5', allowed_rooms: 'all' }
-            ]);
-            XLSX.utils.book_append_sheet(wb, wsStudents, "Students");
-            XLSX.utils.book_append_sheet(wb, wsSubjects, "Subjects");
-            XLSX.writeFile(wb, "Template_SWOlympic.xlsx");
-        });
 
-        // Parse Logic helper
-        const handleExcelUpload = (e, isSubject) => {
+        const handleExcelUpload = (e, type) => {
             const file = e.target.files[0];
-            if (!file) return;
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = async (ev) => {
-                try {
-                    Swal.fire({ title: 'กำลังนำเข้าข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    const data = new Uint8Array(ev.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                const data = new Uint8Array(ev.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(ws);
+                
+                Swal.fire({ title: 'กำลังนำเข้าข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                let count = 0;
+                let batch = writeBatch(db);
+                
+                for(let row of rows) {
+                    if(!row.id) continue;
+                    const ref = doc(db, getPath(type), String(row.id));
+                    const payload = { ...row, id: String(row.id) };
                     
-                    let count = 0;
-                    let totalCount = 0;
-                    let batch = writeBatch(db);
-                    let batches = [];
-
-                    if (isSubject) {
-                        // Find first sheet
-                        const sheetName = workbook.SheetNames.includes('Subjects') ? 'Subjects' : workbook.SheetNames[0];
-                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-                        rows.forEach(row => {
-                            if(row.id && row.subject_name && row.total_slots) {
-                                const ref = doc(db, getPath('subjects'), String(row.id));
-                                batch.set(ref, {
-                                    subject_name: row.subject_name,
-                                    teacher: row.teacher || '-',
-                                    location: row.location || '-',
-                                    total_slots: parseInt(row.total_slots),
-                                    remaining_slots: parseInt(row.total_slots),
-                                    allowed_grades: String(row.allowed_grades || 'all'),
-                                    allowed_rooms: String(row.allowed_rooms || 'all')
-                                }, { merge: true });
-                                count++;
-                                totalCount++;
-                                if (count === 400) {
-                                    batches.push(batch);
-                                    batch = writeBatch(db);
-                                    count = 0;
-                                }
-                            }
-                        });
-                    } else {
-                        const sheetName = workbook.SheetNames.includes('Students') ? 'Students' : workbook.SheetNames[0];
-                        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-                        rows.forEach(row => {
-                            if(row.id) {
-                                const ref = doc(db, getPath('students'), String(row.id));
-                                batch.set(ref, {
-                                    name: row.name || 'Unknown',
-                                    grade: String(row.grade || ''),
-                                    room: String(row.room || ''),
-                                    status: 'unregistered',
-                                    registered_subject_id: null
-                                }, { merge: true });
-                                count++;
-                                totalCount++;
-                                if (count === 400) {
-                                    batches.push(batch);
-                                    batch = writeBatch(db);
-                                    count = 0;
-                                }
-                            }
-                        });
+                    if(type === 'students') {
+                        payload.status = row.status || 'unregistered';
+                        payload.registered_subject_id = row.registered_subject_id || null;
+                    } else if(type === 'subjects') {
+                        payload.total_slots = parseInt(row.total_slots) || 30;
+                        payload.remaining_slots = parseInt(row.remaining_slots) || payload.total_slots;
                     }
-
-                    if (count > 0) batches.push(batch);
                     
-                    for (let b of batches) {
-                        await b.commit();
+                    batch.set(ref, payload, { merge: true });
+                    count++;
+                    if(count % 400 === 0) {
+                        await batch.commit();
+                        batch = writeBatch(db);
                     }
-
-                    Swal.fire('สำเร็จ', `นำเข้าข้อมูล ${totalCount} รายการ สำเร็จ`, 'success');
-                } catch (err) { Swal.fire('เกิดข้อผิดพลาด', 'รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาดในการนำเข้า', 'error'); console.error(err); }
+                }
+                await batch.commit();
+                Swal.fire('สำเร็จ', `นำเข้าข้อมูล ${count} รายการเรียบร้อย`, 'success');
                 e.target.value = '';
             };
             reader.readAsArrayBuffer(file);
         };
 
-        document.getElementById('excel-upload-subjects').addEventListener('change', (e) => handleExcelUpload(e, true));
-        document.getElementById('excel-upload-students').addEventListener('change', (e) => handleExcelUpload(e, false));
+        document.getElementById('excel-upload-subjects').onchange = (e) => handleExcelUpload(e, 'subjects');
+        document.getElementById('excel-upload-students').onchange = (e) => handleExcelUpload(e, 'students');
 
-        document.getElementById('btn-export-all-data').addEventListener('click', () => {
-            if (studentsList.length === 0) return Swal.fire('ข้อมูลว่างเปล่า', '', 'info');
-            const exportData = studentsList.map(stu => {
-                const sub = subjectsList.find(s => s.id === stu.registered_subject_id);
+        document.getElementById('btn-export-all-data').onclick = () => {
+            const data = studentsList.map(s => {
+                const sub = subjectsList.find(x => x.id === s.registered_subject_id);
                 return {
-                    'รหัสนักเรียน': stu.id,
-                    'ชื่อ-นามสกุล': stu.name,
-                    'ระดับชั้น': stu.grade || '',
-                    'ห้อง': stu.room || '',
-                    'สถานะ': stu.status === 'registered' ? 'ลงทะเบียนแล้ว' : 'ยังไม่ลงทะเบียน',
-                    'รหัสวิชาที่ได้': stu.registered_subject_id || '',
-                    'ชื่อวิชา': sub ? sub.subject_name : '',
-                    'ผู้สอน': sub ? sub.teacher : '',
-                    'สถานที่เรียน': sub ? sub.location : '',
-                    'เวลาลงทะเบียน': stu.timestamp ? new Date(stu.timestamp).toLocaleString('th-TH') : ''
+                    'รหัสนักเรียน': s.id,
+                    'ชื่อ-นามสกุล': s.name,
+                    'ระดับชั้น': s.grade,
+                    'ห้อง': s.room,
+                    'วิชาที่เลือก': s.registered_subject_id || 'ยังไม่ลง',
+                    'ชื่อวิชา': sub ? sub.subject_name : '-',
+                    'ครูผู้สอน': sub ? sub.teacher : '-',
+                    'เวลาลงทะเบียน': s.timestamp ? new Date(s.timestamp).toLocaleString('th-TH') : '-'
                 };
             });
-            const ws = XLSX.utils.json_to_sheet(exportData);
+            const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Registration_Report");
-            XLSX.writeFile(wb, `Report_All_${new Date().getTime()}.xlsx`);
-        });
+            XLSX.utils.book_append_sheet(wb, ws, "สรุปทั้งหมด");
+            XLSX.writeFile(wb, "สรุปการลงทะเบียน_SWOlympic.xlsx");
+        };
 
-        // --- เพิ่มโค้ดส่วนที่หายไปตรงนี้ ---
-        document.getElementById('btn-export-unreg').addEventListener('click', () => {
-            const unregList = studentsList.filter(s => s.status !== 'registered');
-            if (unregList.length === 0) return Swal.fire('ข้อมูลครบถ้วน', 'นักเรียนทุกคนลงทะเบียนเรียบร้อยแล้ว!', 'success');
-
-            const exportData = unregList.map((stu, i) => ({
-                'ลำดับ': i + 1,
-                'รหัสนักเรียน': stu.id,
-                'ชื่อ-นามสกุล': stu.name,
-                'ระดับชั้น': stu.grade || '',
-                'ห้อง': stu.room || ''
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
+        document.getElementById('btn-export-unreg').onclick = () => {
+            const unreg = studentsList.filter(s => s.status !== 'registered');
+            if(unreg.length === 0) return Swal.fire('ข้อมูลครบ', 'นักเรียนทุกคนลงทะเบียนครบแล้ว', 'success');
+            const data = unreg.map(s => ({ 'รหัส': s.id, 'ชื่อ': s.name, 'ชั้น': s.grade, 'ห้อง': s.room }));
+            const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "ยังไม่ลงทะเบียน");
-            XLSX.writeFile(wb, `รายชื่อนักเรียนที่ยังไม่ลงทะเบียน_${new Date().getTime()}.xlsx`);
-        });
-        // -----------------------------
+            XLSX.utils.book_append_sheet(wb, ws, "รายชื่อที่ยังไม่ลงทะเบียน");
+            XLSX.writeFile(wb, "คนยังไม่ลงทะเบียน.xlsx");
+        };
 
-        // Admin: Manage Staff
-        document.getElementById('staff-role').addEventListener('change', (e) => {
-            const isTeacher = e.target.value === 'teacher';
-            document.getElementById('div-staff-subject').style.display = isTeacher ? 'block' : 'none';
-        });
+        // --- System Settings ---
 
-        document.getElementById('form-manage-staff').addEventListener('submit', async (e) => {
+        document.getElementById('btn-save-settings').onclick = async () => {
+            const start = new Date(document.getElementById('system-start-time').value).getTime();
+            const end = new Date(document.getElementById('system-end-time').value).getTime();
+            if(!start || !end) return Swal.fire('Error', 'กรุณาระบุเวลาให้ครบถ้วน', 'warning');
+            
+            await setDoc(doc(db, getPath('settings'), 'system'), {
+                startTime: start,
+                endTime: end
+            }, { merge: true });
+            
+            Swal.fire('สำเร็จ', 'บันทึกวันเวลาเรียบร้อย ระบบจะเปิด-ปิดตามเวลาที่กำหนด', 'success');
+        };
+
+        document.getElementById('toggle-system-status').onclick = async () => {
+            await updateDoc(doc(db, getPath('settings'), 'system'), { isOpen: !systemSettings.isOpen });
+        };
+
+        window.clearSystemData = async (type) => {
+            const res = await Swal.fire({
+                title: 'ยืนยันการล้างข้อมูล?',
+                text: 'การกระทำนี้ไม่สามารถย้อนคืนได้!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ใช่, ฉันต้องการลบ'
+            });
+            if(res.isConfirmed) {
+                Swal.fire({ title: 'กำลังลบข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const target = type === 'all' ? ['students', 'subjects'] : [type];
+                for(let col of target) {
+                    const snaps = await getDocs(collection(db, getPath(col)));
+                    let batch = writeBatch(db);
+                    let c = 0;
+                    snaps.forEach(d => {
+                        batch.delete(d.ref);
+                        c++;
+                        if(c % 400 === 0) { batch.commit(); batch = writeBatch(db); }
+                    });
+                    await batch.commit();
+                }
+                Swal.fire('สำเร็จ', 'ข้อมูลถูกล้างเรียบร้อย', 'success');
+            }
+        };
+
+        // --- Staff logic ---
+
+        document.getElementById('staff-role').onchange = (e) => {
+            document.getElementById('div-staff-subject').style.display = e.target.value === 'teacher' ? 'block' : 'none';
+        };
+
+        document.getElementById('form-manage-staff').onsubmit = async (e) => {
             e.preventDefault();
             const user = document.getElementById('staff-user').value.trim();
             const pass = document.getElementById('staff-pass').value.trim();
             const name = document.getElementById('staff-name').value.trim();
             const role = document.getElementById('staff-role').value;
-            const subject = document.getElementById('staff-subject').value.trim();
+            const sub = document.getElementById('staff-subject').value.trim();
 
-            if (!user) return;
-            Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
-            
-            try {
-                const docRef = doc(db, getPath('staff'), user);
-                await setDoc(docRef, { username: user, password: pass, name: name, role: role, subject_id: role==='teacher'?subject:null });
-                Swal.fire('สำเร็จ', 'บันทึกข้อมูลบุคลากรแล้ว', 'success');
-                e.target.reset();
-            } catch(err) { Swal.fire('Error', err.message, 'error'); }
-        });
-
-        window.deleteStaff = async (staffId) => {
-            if(staffId === 'admin') return Swal.fire('ปฏิเสธ', 'ไม่สามารถลบ Admin หลักของระบบได้', 'error');
-            if(confirm('ยืนยันการลบ?')) {
-                await deleteDoc(doc(db, getPath('staff'), staffId));
-            }
+            await setDoc(doc(db, getPath('staff'), user), {
+                username: user, password: pass, name, role, subject_id: role === 'teacher' ? sub : null
+            });
+            Swal.fire('สำเร็จ', 'บันทึกข้อมูลบุคลากรแล้ว', 'success');
+            e.target.reset();
         };
 
-        function renderAdminStaff() {
-            const tbody = document.getElementById('admin-staff-list');
-            tbody.innerHTML = '';
-            staffList.forEach(st => {
-                const roleText = st.role === 'admin' ? '<span class="text-indigo-600 font-bold">Admin</span>' : '<span class="text-blue-600">Teacher</span>';
-                tbody.insertAdjacentHTML('beforeend', `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${st.username}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${st.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">${roleText}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${st.subject_id || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
-                            <button onclick="deleteStaff('${st.id}')" class="text-red-600 hover:text-red-900 font-bold">ลบ</button>
-                        </td>
-                    </tr>
-                `);
-            });
-        }
+        window.deleteStaff = async (id) => {
+            if(id === 'admin') return;
+            if(confirm('ลบบุคลากรท่านนี้?')) await deleteDoc(doc(db, getPath('staff'), id));
+        };
 
-        // Start Application
-        window.addEventListener('DOMContentLoaded', initApp);
+        // --- Start App ---
+        initApp();
+
     </script>
 </body>
 </html>
