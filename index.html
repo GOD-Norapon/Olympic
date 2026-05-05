@@ -703,16 +703,22 @@
                 if(callback) callback('subjects');
             });
 
-            unsubStudents = onSnapshot(collection(db, getPath('students')), (snap) => {
-                studentsList = [];
-                snap.forEach(doc => studentsList.push({ id: doc.id, ...doc.data() }));
-                
-                if(currentUser && currentUser.role === 'student') {
-                    const myData = studentsList.find(s => s.id === currentUser.id);
-                    if(myData) currentUser.data = myData;
-                }
-                if(callback) callback('students');
-            });
+            if (currentUser && currentUser.role === 'student') {
+                // [Optimization] นักเรียนดึงข้อมูลแบบเจาะจงเฉพาะตัวเอง 1 document เพื่อลดค่า Read
+                unsubStudents = onSnapshot(doc(db, getPath('students'), currentUser.id), (docSnap) => {
+                    if (docSnap.exists()) {
+                        currentUser.data = docSnap.data();
+                        if (callback) callback('students');
+                    }
+                });
+            } else {
+                // [Optimization] ครูและแอดมิน โหลดนักเรียนทั้งหมดเพื่อแสดงตาราง/รายงาน
+                unsubStudents = onSnapshot(collection(db, getPath('students')), (snap) => {
+                    studentsList = [];
+                    snap.forEach(doc => studentsList.push({ id: doc.id, ...doc.data() }));
+                    if (callback) callback('students');
+                });
+            }
         }
 
         function updateCatTimer() {
