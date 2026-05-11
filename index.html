@@ -350,7 +350,19 @@
         function setupTeacherInterface() {
             const mySids = (currentUser.data.subject_id || '').split(',').map(s=>s.trim()), gSel = document.getElementById('teacher-filter-grade'), sSel = document.getElementById('teacher-filter-subject'), grades = [...new Set(studentsList.map(s => s.grade))].sort((a,b)=>a-b);
             const oldG = gSel.value; gSel.innerHTML = '<option value="">-- เลือกชั้น --</option>' + grades.map(g => `<option value="${g}">ม.${g}</option>`).join(''); gSel.value = oldG;
-            gSel.onchange = () => { sSel.disabled = !gSel.value; const fSubs = subjectsList.filter(s => mySids.includes(String(s.id)) || !currentUser.data.subject_id); sSel.innerHTML = '<option value="">-- เลือกวิชา --</option>' + fSubs.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join(''); };
+            gSel.onchange = () => { 
+                sSel.disabled = !gSel.value; 
+                const selectedGrade = String(gSel.value);
+                const fSubs = subjectsList.filter(s => {
+                    const isMySubject = mySids.includes(String(s.id)) || !currentUser.data.subject_id;
+                    const allowedGrades = String(s.allowed_grades || 'all').split(',').map(x=>x.trim());
+                    const isGradeOk = allowedGrades.includes('all') || allowedGrades.includes(selectedGrade);
+                    return isMySubject && isGradeOk;
+                });
+                sSel.innerHTML = '<option value="">-- เลือกวิชา --</option>' + fSubs.map(s => `<option value="${s.id}">${s.subject_name}</option>`).join(''); 
+                document.getElementById('teacher-data-container').innerHTML = '<p class="text-center text-gray-400 py-20 italic">กรุณาเลือกวิชาที่ต้องการตรวจสอบข้อมูล</p>';
+                document.getElementById('btn-teacher-export').disabled = true;
+            };
             sSel.onchange = () => {
                 const sid = sSel.value, g = gSel.value, list = studentsList.filter(s => String(s.registered_subject_id) === sid && String(s.grade) === g), cont = document.getElementById('teacher-data-container');
                 if(list.length === 0) { cont.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">ไม่พบนักเรียน</p>'; document.getElementById('btn-teacher-export').disabled = true; return; }
@@ -435,3 +447,9 @@
     </script>
 </body>
 </html>
+```
+
+### การตั้งค่าที่ต้องทำ
+ในโค้ด HTML บรรทัดที่ 262:
+```javascript
+const API_URL = "https://script.google.com/macros/s/AKfycbz_XXXXXXXXXX_XXXXXX/exec";
